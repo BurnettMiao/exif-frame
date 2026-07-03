@@ -4,7 +4,8 @@ import ExifReader from 'exifreader'
 
 // 用來存放照片資訊的響應式變數
 const photoInfo = ref<any>(null)
-const previewUrl = ref<string | null>(null)
+const previewUrl = ref<string>('')
+const previewImgArr = ref<string[]>([])
 
 const handleFileUpload = async (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -12,8 +13,10 @@ const handleFileUpload = async (event: Event) => {
   console.log(file)
   if (!file) return
 
-  // 1. 預覽照片 (建立一個暫時的 URL)
-  previewUrl.value = URL.createObjectURL(file)
+  // 建立新的預覽連結與加入圖片陣列
+  const newPreviewUrl = URL.createObjectURL(file)
+  previewImgArr.value.push(newPreviewUrl)
+  previewUrl.value = newPreviewUrl
 
   try {
     // 2. 讀取 EXIF 資訊
@@ -34,6 +37,24 @@ const handleFileUpload = async (event: Event) => {
   } catch (error) {
     console.log('解析 EXIF 出錯：', error)
     photoInfo.value = { error: '無法讀取此照片的 EXIF 資訊' }
+  }
+}
+
+const selectedPreview = (index: number) => {
+  if (previewImgArr.value && previewImgArr.value[index]) {
+    previewUrl.value = previewImgArr.value[index]
+  }
+}
+
+const deleteImg = (index: number) => {
+  previewImgArr.value.splice(index, 1)
+
+  if (previewImgArr.value.length === 0) {
+    previewUrl.value = ''
+  } else if (index >= previewImgArr.value.length) {
+    previewUrl.value = previewImgArr.value[index - 1] || ''
+  } else {
+    previewUrl.value = previewImgArr.value[index] || ''
   }
 }
 </script>
@@ -70,10 +91,20 @@ const handleFileUpload = async (event: Event) => {
           class="bg-white p-2 shadow-sm rounded-lg flex items-center justify-center gap-x-3 absolute -top-3 left-1/2 -translate-x-1/2"
         >
           <div
-            class="w-12 h-12 bg-white"
+            @click="selectedPreview(index)"
+            v-for="(img, index) in previewImgArr"
+            :key="img"
+            class="w-12 h-12 bg-white cursor-pointer group relative"
             :class="{ 'border-2 border-dotted border-gray-400': !previewUrl }"
           >
-            <img :src="previewUrl" alt="" class="w-full h-full object-cover" />
+            <img :src="img" alt="" class="w-full h-full object-cover" />
+
+            <div
+              @click="deleteImg(index)"
+              class="absolute -top-2 right-0 w-5 h-5 flex items-center justify-center bg-white rounded-full opacity-0 group-hover:opacity-100"
+            >
+              <i class="ri-delete-bin-line text-gray-500 text-xs hover:text-red-600"></i>
+            </div>
           </div>
 
           <label
@@ -90,7 +121,7 @@ const handleFileUpload = async (event: Event) => {
           <img
             :src="previewUrl"
             alt="preview img"
-            class="w-auto max-w-full h-auto max-h-full object-contain p-4 pb-20 bg-white rounded-lg shadow-lg"
+            class="w-auto max-w-full h-auto max-h-full object-contain p-4 bg-white rounded-lg shadow-lg"
           />
         </div>
       </div>
@@ -98,7 +129,7 @@ const handleFileUpload = async (event: Event) => {
 
     <!-- 右側區域 -->
     <div
-      class="min-w-30 2xl:min-w-60 bg-white px-4 py-7 border-l border-l-gray-200 flex flex-col h-full overflow-hidden"
+      class="min-w-45 2xl:min-w-60 bg-white px-4 py-7 border-l border-l-gray-200 flex flex-col h-full overflow-hidden"
     >
       <div class="flex-1 overflow-y-scroll flex flex-col gap-y-4">
         <div v-for="i in 5" :key="i">
