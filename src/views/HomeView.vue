@@ -4,7 +4,7 @@ import ExifReader from 'exifreader'
 
 // 用來存放照片資訊的響應式變數
 const photoInfo = ref<any>(null)
-const imageUrl = ref<string | null>(null)
+const previewUrl = ref<string | null>(null)
 
 const handleFileUpload = async (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -13,7 +13,7 @@ const handleFileUpload = async (event: Event) => {
   if (!file) return
 
   // 1. 預覽照片 (建立一個暫時的 URL)
-  imageUrl.value = URL.createObjectURL(file)
+  previewUrl.value = URL.createObjectURL(file)
 
   try {
     // 2. 讀取 EXIF 資訊
@@ -40,17 +40,17 @@ const handleFileUpload = async (event: Event) => {
 
 <template>
   <div class="flex w-full h-full overflow-hidden">
-    <!-- 左側預覽區 -->
+    <!-- 左側區域 -->
     <div class="w-full h-full p-5 bg-gray-100">
-      <div class="bg-white rounded-lg shadow p-4 w-full h-full">
-        <input
-          id="image-upload"
-          @change="handleFileUpload"
-          class="hidden"
-          type="file"
-          accept="image/*"
-        />
-
+      <!-- 上傳區域 -->
+      <input
+        id="image-upload"
+        @change="handleFileUpload"
+        class="hidden"
+        type="file"
+        accept="image/*"
+      />
+      <div v-if="!previewUrl" class="bg-white rounded-lg shadow p-4 w-full h-full">
         <!-- 自訂樣式的 label -->
         <label
           for="image-upload"
@@ -62,11 +62,43 @@ const handleFileUpload = async (event: Event) => {
           </div>
         </label>
       </div>
+
+      <!-- 預覽區塊 -->
+      <div v-if="previewUrl" class="w-full h-full relative">
+        <!-- 縮圖預覽 -->
+        <div
+          class="bg-white p-2 shadow-sm rounded-lg flex items-center justify-center gap-x-3 absolute -top-3 left-1/2 -translate-x-1/2"
+        >
+          <div
+            class="w-12 h-12 bg-white"
+            :class="{ 'border-2 border-dotted border-gray-400': !previewUrl }"
+          >
+            <img :src="previewUrl" alt="" class="w-full h-full object-cover" />
+          </div>
+
+          <label
+            for="image-upload"
+            class="w-12 h-12 flex items-center justify-center cursor-pointer bg-white"
+            :class="{ 'border-2 border-dotted border-gray-400': previewUrl }"
+          >
+            <i class="ri-image-upload-fill text-gray-400"></i>
+          </label>
+        </div>
+
+        <!-- 大圖預覽 -->
+        <div class="w-full h-full flex items-center justify-center">
+          <img
+            :src="previewUrl"
+            alt="preview img"
+            class="w-auto max-w-full h-auto max-h-full object-contain p-4 pb-20 bg-white rounded-lg shadow-lg"
+          />
+        </div>
+      </div>
     </div>
 
-    <!-- 右側編輯工具區 -->
+    <!-- 右側區域 -->
     <div
-      class="sm:min-w-50 2xl:min-w-60 bg-white px-4 py-7 border-l border-l-gray-200 flex flex-col h-full overflow-hidden"
+      class="min-w-30 2xl:min-w-60 bg-white px-4 py-7 border-l border-l-gray-200 flex flex-col h-full overflow-hidden"
     >
       <div class="flex-1 overflow-y-scroll flex flex-col gap-y-4">
         <div v-for="i in 5" :key="i">
@@ -78,8 +110,8 @@ const handleFileUpload = async (event: Event) => {
   </div>
 
   <!-- 簡易的拍立得預覽框 -->
-  <!-- <div v-if="imageUrl" class="bg-white p-4 shadow-xl border border-gray-200 rounded-sm">
-    <img :src="imageUrl" class="w-full aspect-square object-cover mb-4" />
+  <!-- <div v-if="previewUrl" class="bg-white p-4 shadow-xl border border-gray-200 rounded-sm">
+    <img :src="previewUrl" class="w-full aspect-square object-cover mb-4" />
 
     <div v-if="photoInfo" class="text-gray-600 font-mono text-sm space-y-1">
       <p>📅 日期：{{ photoInfo.date }}</p>

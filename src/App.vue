@@ -21,7 +21,15 @@ import { RouterLink, RouterView } from 'vue-router'
     </div>
 
     <!-- footer -->
-    <div class="text-center p-4 bg-white border-t border-t-gray-200">footer</div>
+    <div
+      class="p-4 bg-white border-t border-t-gray-200 w-full max-w-7xl flex items-center justify-between mx-auto"
+    >
+      <div class="font-bold text-2xl flex items-center gap-x-2">
+        <i class="ri-camera-3-line"></i> <span>Exif Frame</span>
+      </div>
+
+      <div class="font-bold text-xl">Burnet Studio</div>
+    </div>
   </div>
 </template>
 
