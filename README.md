@@ -40,3 +40,10 @@ npm run dev
 ```sh
 npm run build
 ```
+
+---
+
+### 製作紀錄與相關重點
+
+- 圖片上傳
+- canvas操作
