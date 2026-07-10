@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted } from 'vue'
 import ExifReader from 'exifreader'
+import type { PhotoInfo } from '@/types/previewArea'
 
 import pic from '@/assets/DSC00255.jpg'
-import { updateSourceFile } from 'typescript'
+import sony from '@/assets/logos/Sony_logo.svg'
 
-const photoInfo = ref<any>(null)
+const photoInfo = ref<PhotoInfo | null>(null)
 const previewImgArr = ref<string[]>([])
 const currentPreviewIndex = ref<number>(0)
 
@@ -13,6 +14,7 @@ const canvas = ref<HTMLCanvasElement | null>(null)
 const ctx = ref<CanvasRenderingContext2D | null>(null)
 const currentImage = ref<HTMLImageElement | null>(null)
 const currentFilter = ref<string>('none')
+const logoImage = ref<HTMLImageElement | null>(null)
 
 // 上下左右白邊
 const padding = {
@@ -21,6 +23,9 @@ const padding = {
   bottom: 120,
   left: 120,
 }
+
+// 文字之前間距
+const gap = 50
 
 // 統一的繪製函式：畫面上看到的，就是最終匯出的樣子
 const renderCanvas = () => {
@@ -49,21 +54,31 @@ const renderCanvas = () => {
 
   // 畫 EXIF 資訊（不受濾鏡影響）
   if (hasInfo) {
+    const info = photoInfo.value!
+
     ctx.value.fillStyle = '#4b5563'
     ctx.value.font = `${infoLineHeight}px monospace`
     ctx.value.textBaseline = 'top'
-    const x = infoPadding
+    ctx.value.textAlign = 'left' // 確保是左對齊
+
+    const infoWidth = img.width * 0.58 // 你可以調整這個比例 (0.5 ~ 0.65)
+    const x = padding.left + img.width - infoWidth // 直接對齊照片右邊緣
     let y = img.height + infoPadding + padding.top
-    console.log(img.height, infoPadding, padding.top, infoLineHeight)
-    ctx.value.fillText(`日期：${photoInfo.value.date}`, x, y)
-    y += infoLineHeight
-    ctx.value.fillText(`相機：${photoInfo.value.model}`, x, y)
-    y += infoLineHeight
-    ctx.value.fillText(
-      `參數：f/${photoInfo.value.aperture} | ${photoInfo.value.exposure}s | ISO ${photoInfo.value.iso}`,
-      x,
-      y,
-    )
+    // console.log(img.height, infoPadding, padding.top, infoLineHeight)
+    ctx.value.fillText(`日期：${info.date}`, x, y)
+    y += infoLineHeight + gap
+    ctx.value.fillText(`相機：${info.model}`, x, y)
+    y += infoLineHeight + gap
+    ctx.value.fillText(`參數：f/${info.aperture} | ${info.exposure}s | ISO ${info.iso}`, x, y)
+  }
+
+  // 畫 Logo (不受濾鏡影響)
+  if (logoImage.value) {
+    const logoWidth = img.width * 0.15 // 設定 Logo 為圖片寬度的 15%
+    const logoHeight = (logoImage.value.height / logoImage.value.width) * logoWidth
+    const x = padding.left // 左下角
+    const y = padding.top + img.height + infoHeight - logoHeight - 20
+    ctx.value.drawImage(logoImage.value, x, y, logoWidth, logoHeight)
   }
 }
 
@@ -82,7 +97,7 @@ const handleFileUpload = async (event: Event) => {
   const file = target.files?.[0]
   if (!file) return
 
-  // 直接呼叫通用的處理函式
+  // 直接呼叫通用的圖片處理函式
   await processImage(file)
 }
 
@@ -94,7 +109,14 @@ const selectedPreview = (index: number) => {
 }
 
 const deleteImg = (index: number) => {
+  // 呼叫 URL.revokeObjectURL() 釋放它，避免不必要的記憶體占用。
+  const deletedUrl = previewImgArr.value[index]
+  if (deletedUrl) {
+    URL.revokeObjectURL(deletedUrl)
+  }
+
   previewImgArr.value.splice(index, 1)
+
   if (previewImgArr.value.length === 0) {
     currentImage.value = null
   } else {
@@ -130,6 +152,7 @@ const processImage = async (source: File | string) => {
 
   try {
     const tags = await ExifReader.load(file)
+    console.log('上傳圖片資訊', tags)
     photoInfo.value = {
       date: tags['DateTimeOriginal']?.description || '未知日期',
       model: tags['Model']?.description || '未知相機',
@@ -158,8 +181,15 @@ const downloadImage = () => {
   link.click()
 }
 
-// 預先載入測試圖片
+// 預先載入logo 與 測試圖片
 onMounted(() => {
+  const logo = new Image()
+  logo.crossOrigin = 'anonymous'
+  logo.src = sony
+  logo.onload = () => {
+    logoImage.value = logo
+  }
+
   processImage(pic)
 })
 </script>
@@ -193,7 +223,7 @@ onMounted(() => {
     <div v-else class="w-full h-full relative">
       <!-- 縮圖列 -->
       <div
-        class="bg-white p-2 shadow-sm rounded-lg flex items-center justify-center gap-x-3 absolute -top-3 left-1/2 -translate-x-1/2"
+        class="bg-white p-2 shadow-sm rounded-sm flex items-center justify-center gap-x-3 absolute -top-3 left-1/2 -translate-x-1/2"
       >
         <div
           @click="selectedPreview(index)"

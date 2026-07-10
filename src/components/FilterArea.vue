@@ -2,12 +2,12 @@
 
 <template>
   <div
-    class="min-w-45 2xl:min-w-60 bg-white px-4 py-7 border-l border-l-gray-200 flex flex-col h-full overflow-hidden"
+    class="min-w-45 2xl:min-w-60 bg-white px-4 py-6 border-l border-l-gray-200 flex flex-col h-full overflow-hidden"
   >
     <div class="flex-1 overflow-y-scroll flex flex-col gap-y-4">
-      <div v-for="i in 5" :key="i">
+      <div v-for="i in 5" :key="i" class="cursor-pointer group">
         <div class="border border-gray-400 rounded-lg w-full aspect-4/3"></div>
-        <div class="mt-1 text-center">範例{{ i }}</div>
+        <div class="mt-1 text-center group-hover:text-amber-600">範例{{ i }}</div>
       </div>
     </div>
   </div>

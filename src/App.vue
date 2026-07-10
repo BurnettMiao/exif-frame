@@ -21,7 +21,7 @@ import { RouterLink, RouterView } from 'vue-router'
     </div>
 
     <!-- footer -->
-    <div
+    <!-- <div
       class="p-4 bg-white border-t border-t-gray-200 w-full max-w-7xl flex items-center justify-between mx-auto"
     >
       <div class="font-bold text-2xl flex items-center gap-x-2">
@@ -29,7 +29,7 @@ import { RouterLink, RouterView } from 'vue-router'
       </div>
 
       <div class="font-bold text-xl">Burnet Studio</div>
-    </div>
+    </div> -->
   </div>
 </template>
 
