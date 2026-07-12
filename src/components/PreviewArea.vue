@@ -33,14 +33,21 @@ const renderCanvas = () => {
   if (!ctx.value) ctx.value = canvas.value.getContext('2d')
   if (!ctx.value) return
 
+  // ===== Cavas 照片＋info高度 =====
   const img = currentImage.value
-  const infoLineHeight = Math.round(img.width * 0.03)
-  const infoPadding = Math.round(img.width * 0.04)
+  // 如果希望無論橫向直向都一致，可以用「較短的那一邊」
+  const baseSize = Math.min(img.width, img.height)
+  // 1. 字體大小 = 圖片寬度的 3%（隨圖片尺寸變化）
+  const infoLineHeight = Math.round(baseSize * 0.03)
+  // 2. 間距 = 圖片寬度的 4%（隨圖片尺寸變化）
+  const infoPadding = Math.round(baseSize * 0.04)
+  // 3. 資訊區總高度 = 3 行文字 + 2 個間距（如果有的話）
   const hasInfo = !!photoInfo.value && !photoInfo.value.error
+  // 4. Canvas 總高度 = 圖片 + 上下邊距 + 資訊區
   const infoHeight = hasInfo ? infoLineHeight * 3 + infoPadding * 2 : 0
 
   canvas.value.width = img.width + padding.left + padding.right
-  canvas.value.height = img.height + infoHeight + padding.top + padding.bottom
+  canvas.value.height = img.height + padding.top + padding.bottom + infoHeight
 
   // 底色（避免 jpg 匯出時資訊區變黑）
   ctx.value.fillStyle = '#ffffff'
@@ -61,27 +68,29 @@ const renderCanvas = () => {
     ctx.value.textBaseline = 'top'
     ctx.value.textAlign = 'left' // 確保是左對齊
 
-    const infoWidth = img.width * 0.58 // 你可以調整這個比例 (0.5 ~ 0.65)
-    const x = padding.left + img.width - infoWidth // 直接對齊照片右邊緣
+    const x = padding.left + img.width / 2 //
     let y = img.height + infoPadding + padding.top
     // console.log(img.height, infoPadding, padding.top, infoLineHeight)
-    ctx.value.fillText(`日期：${info.date}`, x, y)
-    y += infoLineHeight + gap
-    ctx.value.fillText(`相機：${info.model}`, x, y)
-    y += infoLineHeight + gap
-    ctx.value.fillText(`參數：f/${info.aperture} | ${info.exposure}s | ISO ${info.iso}`, x, y)
+    // ctx.value.fillText(`${info.date}`, x, y)
+    y += infoLineHeight / 2
+    ctx.value.font = `${infoLineHeight * 1.25}px monospace`
+    ctx.value.fillText(`Shot on ${info.model}`, x, y)
+    y += infoLineHeight * 0.8 + gap
+    ctx.value.font = `${infoLineHeight}px monospace`
+    ctx.value.fillText(`${info.aperture} | ${info.exposure}s | ISO ${info.iso}`, x, y)
   }
 
   // 畫 Logo (不受濾鏡影響)
   if (logoImage.value) {
     const logoWidth = img.width * 0.15 // 設定 Logo 為圖片寬度的 15%
     const logoHeight = (logoImage.value.height / logoImage.value.width) * logoWidth
-    const x = padding.left // 左下角
-    const y = padding.top + img.height + infoHeight - logoHeight - 20
+    const x = img.width / 2 - logoWidth // 至中靠左
+    const y = padding.top + img.height + infoHeight / 2 + infoPadding / 2 - logoHeight / 2
     ctx.value.drawImage(logoImage.value, x, y, logoWidth, logoHeight)
   }
 }
 
+// 將圖片匯入Canvas
 const loadImageToCanvas = (url: string) => {
   const img = new Image()
   img.crossOrigin = 'anonymous'
@@ -92,6 +101,7 @@ const loadImageToCanvas = (url: string) => {
   img.src = url
 }
 
+// 圖片上傳
 const handleFileUpload = async (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
@@ -101,6 +111,7 @@ const handleFileUpload = async (event: Event) => {
   await processImage(file)
 }
 
+// 選擇圖片預覽的功能
 const selectedPreview = (index: number) => {
   currentPreviewIndex.value = index
   const url = previewImgArr.value[index]
@@ -108,6 +119,7 @@ const selectedPreview = (index: number) => {
   loadImageToCanvas(url)
 }
 
+// 刪除圖片功能
 const deleteImg = (index: number) => {
   // 呼叫 URL.revokeObjectURL() 釋放它，避免不必要的記憶體占用。
   const deletedUrl = previewImgArr.value[index]
@@ -128,6 +140,7 @@ const deleteImg = (index: number) => {
   }
 }
 
+// 讀取圖片資訊
 const processImage = async (source: File | string) => {
   let file: File
 
@@ -154,7 +167,7 @@ const processImage = async (source: File | string) => {
     const tags = await ExifReader.load(file)
     console.log('上傳圖片資訊', tags)
     photoInfo.value = {
-      date: tags['DateTimeOriginal']?.description || '未知日期',
+      date: tags['DateTimeOriginal']?.description.split(' ')[0]?.replaceAll(':', '-') || '未知日期',
       model: tags['Model']?.description || '未知相機',
       exposure: tags['ExposureTime']?.description || '未知快門',
       aperture: tags['FNumber']?.description || '未知光圈',
