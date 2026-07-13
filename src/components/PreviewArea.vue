@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, watch } from 'vue'
 import ExifReader from 'exifreader'
 import type { PhotoInfo } from '@/types/previewArea'
+import { useFilterStore } from '@/stores/filter'
+
+const filterStore = useFilterStore()
 
 import pic from '@/assets/DSC00255.jpg'
 import sony from '@/assets/logos/Sony_logo.svg'
@@ -160,6 +163,9 @@ const processImage = async (source: File | string) => {
   previewImgArr.value.push(newPreviewUrl)
   currentPreviewIndex.value = previewImgArr.value.length - 1
 
+  // 新增這行：同步到 store
+  filterStore.setPreviewUrl(newPreviewUrl)
+
   await nextTick()
   loadImageToCanvas(newPreviewUrl)
 
@@ -178,11 +184,6 @@ const processImage = async (source: File | string) => {
     photoInfo.value = { error: '無法讀取此照片的 EXIF 資訊' }
     renderCanvas()
   }
-}
-
-const applyFilter = (filter: string) => {
-  currentFilter.value = filter
-  renderCanvas()
 }
 
 // 匯出：直接存畫面上的 canvas，不用再另外組合
@@ -205,6 +206,15 @@ onMounted(() => {
 
   processImage(pic)
 })
+
+watch(
+  () => filterStore.currentFilter,
+  (newFilter) => {
+    currentFilter.value = newFilter
+    renderCanvas()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -281,42 +291,6 @@ onMounted(() => {
           </canvas>
         </div>
       </div>
-
-      <!-- 濾鏡按鈕範例 -->
-      <!-- <div
-        class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-white/90 p-2 rounded-full shadow"
-      >
-        <button
-          @click="applyFilter('none')"
-          class="px-4 py-1 text-sm rounded-full hover:bg-gray-100"
-        >
-          原圖
-        </button>
-        <button
-          @click="applyFilter('contrast(1.3) saturate(1.4)')"
-          class="px-4 py-1 text-sm rounded-full hover:bg-gray-100"
-        >
-          鮮豔
-        </button>
-        <button
-          @click="applyFilter('sepia(0.7)')"
-          class="px-4 py-1 text-sm rounded-full hover:bg-gray-100"
-        >
-          復古
-        </button>
-        <button
-          @click="applyFilter('grayscale(1)')"
-          class="px-4 py-1 text-sm rounded-full hover:bg-gray-100"
-        >
-          黑白
-        </button>
-        <button
-          @click="downloadImage"
-          class="px-4 py-1 text-sm rounded-full bg-blue-500 text-white"
-        >
-          下載
-        </button>
-      </div> -->
     </div>
   </div>
 </template>
