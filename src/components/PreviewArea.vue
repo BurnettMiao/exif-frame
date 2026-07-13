@@ -120,6 +120,7 @@ const selectedPreview = (index: number) => {
   const url = previewImgArr.value[index]
   if (!url) return
   loadImageToCanvas(url)
+  filterStore.setPreviewUrl(url)
 }
 
 // 刪除圖片功能
