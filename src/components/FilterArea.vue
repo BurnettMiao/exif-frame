@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useFilterStore } from '@/stores/filter'
+import defaultBlur from '@/assets/default.jpg'
 
 type FilterOption = {
   name: string
@@ -56,9 +57,9 @@ const selectedFilter = (index: number) => {
         :key="filter.name"
         class="cursor-pointer group"
       >
-        <div class="border border-gray-400 rounded-lg overflow-hidden w-full aspect-4/3">
+        <div class="border border-gray-100 rounded-lg overflow-hidden w-full aspect-4/3 shadow-sm">
           <img
-            :src="filterStore.currentPreviewUrl"
+            :src="filterStore.currentPreviewUrl ? filterStore.currentPreviewUrl : defaultBlur"
             :style="{ filter: filter.details }"
             class="w-full max-w-36.25 h-full object-cover"
             alt=""

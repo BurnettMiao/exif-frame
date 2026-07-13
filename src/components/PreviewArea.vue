@@ -201,16 +201,16 @@ const downloadImage = () => {
 }
 
 // 預先載入logo 與 測試圖片
-onMounted(() => {
-  const logo = new Image()
-  logo.crossOrigin = 'anonymous'
-  logo.src = sony
-  logo.onload = () => {
-    logoImage.value = logo
-  }
+// onMounted(() => {
+//   const logo = new Image()
+//   logo.crossOrigin = 'anonymous'
+//   logo.src = sony
+//   logo.onload = () => {
+//     logoImage.value = logo
+//   }
 
-  processImage(pic)
-})
+//   processImage(pic)
+// })
 
 watch(
   () => filterStore.currentFilter,
