@@ -66,9 +66,9 @@ const renderCanvas = () => {
     ctx.value.fillStyle = '#4b5563'
     ctx.value.font = `${infoLineHeight}px monospace`
     ctx.value.textBaseline = 'top'
-    ctx.value.textAlign = 'left' // 確保是左對齊
+    ctx.value.textAlign = 'right' // 確保是左對齊
 
-    const x = padding.left + img.width / 2 //
+    const x = padding.left + img.width
     let y = img.height + infoPadding + padding.top
     // console.log(img.height, infoPadding, padding.top, infoLineHeight)
     // ctx.value.fillText(`${info.date}`, x, y)
@@ -84,7 +84,7 @@ const renderCanvas = () => {
   if (logoImage.value) {
     const logoWidth = img.width * 0.15 // 設定 Logo 為圖片寬度的 15%
     const logoHeight = (logoImage.value.height / logoImage.value.width) * logoWidth
-    const x = img.width / 2 - logoWidth // 至中靠左
+    const x = padding.left
     const y = padding.top + img.height + infoHeight / 2 + infoPadding / 2 - logoHeight / 2
     ctx.value.drawImage(logoImage.value, x, y, logoWidth, logoHeight)
   }
