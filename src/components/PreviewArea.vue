@@ -66,7 +66,7 @@ const renderCanvas = () => {
     ctx.value.fillStyle = '#4b5563'
     ctx.value.font = `${infoLineHeight}px monospace`
     ctx.value.textBaseline = 'top'
-    ctx.value.textAlign = 'right' // 確保是左對齊
+    ctx.value.textAlign = 'right'
 
     const x = padding.left + img.width
     let y = img.height + infoPadding + padding.top
