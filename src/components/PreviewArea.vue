@@ -112,6 +112,9 @@ const handleFileUpload = async (event: Event) => {
 
   // 直接呼叫通用的圖片處理函式
   await processImage(file)
+
+  // 清空 input，才能再次選同一張圖片
+  target.value = ''
 }
 
 // 選擇圖片預覽的功能
@@ -141,6 +144,7 @@ const deleteImg = (index: number) => {
     const url = previewImgArr.value[newIndex]
     if (!url) return
     loadImageToCanvas(url)
+    filterStore.setPreviewUrl(url)
   }
 }
 
