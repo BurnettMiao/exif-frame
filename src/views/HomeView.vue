@@ -6,10 +6,10 @@ import FilterArea from '@/components/FilterArea.vue'
 
 <template>
   <div class="flex w-full h-full overflow-hidden">
-    <!-- 右側區域 -->
+    <!-- 左側區域 -->
     <FilterArea />
 
-    <!-- 左側區域 -->
+    <!-- 右側側區域 -->
     <PreviewArea />
   </div>
 </template>
