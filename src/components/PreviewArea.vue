@@ -186,13 +186,12 @@ const processImage = async (source: File | string) => {
       aperture: tags['FNumber']?.description || '未知光圈',
       iso: tags['ISOSpeedRatings']?.description || '未知ISO',
     }
-    renderCanvas()
   } catch (error) {
+    console.error('Exif 讀取失敗', error)
     photoInfoData = { error: '無法讀取此照片的 EXIF 資訊' }
-    renderCanvas()
   }
 
-  // 存成物件
+  // 加入預覽清單
   previewItems.value.push({
     url: newPreviewUrl,
     info: photoInfoData,
@@ -203,11 +202,11 @@ const processImage = async (source: File | string) => {
   filterStore.setPreviewUrl(newPreviewUrl)
 
   await nextTick()
-  loadImageToCanvas(newPreviewUrl)
-
-  // 更新當前顯示的 info
+  // 設定當前顯示的資訊（重要！）
   currentPhotoInfo.value = photoInfoData
-  renderCanvas()
+
+  // 載入圖片 → onload 會自動 renderCanvas()
+  loadImageToCanvas(newPreviewUrl)
 }
 
 // 匯出：直接存畫面上的 canvas，不用再另外組合
