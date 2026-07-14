@@ -9,8 +9,8 @@ const filterStore = useFilterStore()
 import pic from '@/assets/DSC00255.jpg'
 import sony from '@/assets/logos/Sony_logo.svg'
 
-const photoInfo = ref<PhotoInfo | null>(null)
-const previewImgArr = ref<string[]>([])
+const currentPhotoInfo = ref<PhotoInfo | null>(null)
+const previewItems = ref<{ url: string; info: PhotoInfo }[]>([]) // 改為物件陣列
 const currentPreviewIndex = ref<number>(0)
 
 const canvas = ref<HTMLCanvasElement | null>(null)
@@ -45,7 +45,7 @@ const renderCanvas = () => {
   // 2. 間距 = 圖片寬度的 4%（隨圖片尺寸變化）
   const infoPadding = Math.round(baseSize * 0.04)
   // 3. 資訊區總高度 = 3 行文字 + 2 個間距（如果有的話）
-  const hasInfo = !!photoInfo.value && !photoInfo.value.error
+  const hasInfo = !!currentPhotoInfo.value && !currentPhotoInfo.value.error
   // 4. Canvas 總高度 = 圖片 + 上下邊距 + 資訊區
   const infoHeight = hasInfo ? infoLineHeight * 3 + infoPadding * 2 : 0
 
@@ -64,7 +64,7 @@ const renderCanvas = () => {
 
   // 畫 EXIF 資訊（不受濾鏡影響）
   if (hasInfo) {
-    const info = photoInfo.value!
+    const info = currentPhotoInfo.value!
 
     ctx.value.fillStyle = '#4b5563'
     ctx.value.font = `${infoLineHeight}px monospace`
@@ -120,31 +120,40 @@ const handleFileUpload = async (event: Event) => {
 // 選擇圖片預覽的功能
 const selectedPreview = (index: number) => {
   currentPreviewIndex.value = index
-  const url = previewImgArr.value[index]
-  if (!url) return
-  loadImageToCanvas(url)
-  filterStore.setPreviewUrl(url)
+  const item = previewItems.value[index]
+  if (!item) return
+  loadImageToCanvas(item.url)
+  filterStore.setPreviewUrl(item.url)
+
+  // 重要：切換時更新 photoInfo
+  currentPhotoInfo.value = item.info
+  renderCanvas()
 }
 
 // 刪除圖片功能
 const deleteImg = (index: number) => {
   // 呼叫 URL.revokeObjectURL() 釋放它，避免不必要的記憶體占用。
-  const deletedUrl = previewImgArr.value[index]
-  if (deletedUrl) {
-    URL.revokeObjectURL(deletedUrl)
+  const deletedItem = previewItems.value[index]
+  if (deletedItem?.url) {
+    URL.revokeObjectURL(deletedItem.url)
   }
 
-  previewImgArr.value.splice(index, 1)
+  previewItems.value.splice(index, 1)
 
-  if (previewImgArr.value.length === 0) {
+  if (previewItems.value.length === 0) {
     currentImage.value = null
+    currentPhotoInfo.value = null
   } else {
-    const newIndex = Math.min(index, previewImgArr.value.length - 1)
+    const newIndex = Math.min(index, previewItems.value.length - 1)
     currentPreviewIndex.value = newIndex
-    const url = previewImgArr.value[newIndex]
-    if (!url) return
-    loadImageToCanvas(url)
-    filterStore.setPreviewUrl(url)
+    const item = previewItems.value[newIndex]
+
+    if (item) {
+      loadImageToCanvas(item.url)
+      filterStore.setPreviewUrl(item.url)
+      currentPhotoInfo.value = item.info
+      renderCanvas()
+    }
   }
 }
 
@@ -165,19 +174,12 @@ const processImage = async (source: File | string) => {
 
   // --- 以下是原本 handleFileUpload 的核心邏輯 ---
   const newPreviewUrl = URL.createObjectURL(file)
-  previewImgArr.value.push(newPreviewUrl)
-  currentPreviewIndex.value = previewImgArr.value.length - 1
-
-  // 新增這行：同步到 store
-  filterStore.setPreviewUrl(newPreviewUrl)
-
-  await nextTick()
-  loadImageToCanvas(newPreviewUrl)
+  let photoInfoData: PhotoInfo | null = null
 
   try {
     const tags = await ExifReader.load(file)
     console.log('上傳圖片資訊', tags)
-    photoInfo.value = {
+    photoInfoData = {
       date: tags['DateTimeOriginal']?.description.split(' ')[0]?.replaceAll(':', '-') || '未知日期',
       model: tags['Model']?.description || '未知相機',
       exposure: tags['ExposureTime']?.description || '未知快門',
@@ -186,9 +188,26 @@ const processImage = async (source: File | string) => {
     }
     renderCanvas()
   } catch (error) {
-    photoInfo.value = { error: '無法讀取此照片的 EXIF 資訊' }
+    photoInfoData = { error: '無法讀取此照片的 EXIF 資訊' }
     renderCanvas()
   }
+
+  // 存成物件
+  previewItems.value.push({
+    url: newPreviewUrl,
+    info: photoInfoData,
+  })
+
+  currentPreviewIndex.value = previewItems.value.length - 1
+  // 新增這行：同步到 store
+  filterStore.setPreviewUrl(newPreviewUrl)
+
+  await nextTick()
+  loadImageToCanvas(newPreviewUrl)
+
+  // 更新當前顯示的 info
+  currentPhotoInfo.value = photoInfoData
+  renderCanvas()
 }
 
 // 匯出：直接存畫面上的 canvas，不用再另外組合
@@ -234,7 +253,7 @@ watch(
     />
 
     <!-- 無圖片時的上傳區（不變） -->
-    <div v-if="previewImgArr.length === 0" class="bg-white rounded-lg shadow p-4 w-full h-full">
+    <div v-if="previewItems.length === 0" class="bg-white rounded-lg shadow p-4 w-full h-full">
       <!-- 自訂樣式的 label -->
       <label
         for="image-upload"
@@ -255,15 +274,15 @@ watch(
       >
         <div
           @click="selectedPreview(index)"
-          v-for="(img, index) in previewImgArr"
-          :key="img"
+          v-for="(item, index) in previewItems"
+          :key="item.url"
           class="w-12 h-12 border-2 bg-white cursor-pointer group relative"
           :class="{
             'border-black': index === currentPreviewIndex,
             'border-white': index !== currentPreviewIndex,
           }"
         >
-          <img :src="img" alt="" class="w-full h-full object-cover" />
+          <img :src="item.url" alt="" class="w-full h-full object-cover" />
 
           <!-- 非選中的圖片遮罩 -->
           <div
