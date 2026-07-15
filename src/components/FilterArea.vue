@@ -61,7 +61,7 @@ const selectedFilter = (index: number) => {
           <img
             :src="filterStore.currentPreviewUrl || defaultBlur"
             :style="{ filter: filter.details }"
-            class="w-full max-w-36.25 h-full object-cover"
+            class="w-full max-w-52.5 h-full object-center object-cover"
             alt=""
           />
         </div>
