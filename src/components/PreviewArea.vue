@@ -30,9 +30,38 @@ const padding = {
 // 文字之前間距
 const gap = 50
 
+// 圖片上傳
+const handleFileUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  // 直接呼叫通用的圖片處理函式
+  await processImage(file)
+
+  // 清空 input，才能再次選同一張圖片
+  target.value = ''
+}
+
+// 將圖片匯入Canvas
+const loadImageToCanvas = (url: string) => {
+  const img = new Image()
+  img.crossOrigin = 'anonymous'
+  img.onload = async () => {
+    currentImage.value = img
+    // 多等一次，確保 canvas ref 可用
+    await nextTick()
+    renderCanvas()
+  }
+  img.src = url
+}
+
 // 統一的繪製函式：畫面上看到的，就是最終匯出的樣子
 const renderCanvas = () => {
-  if (!canvas.value || !currentImage.value) return
+  if (!canvas.value || !currentImage.value) {
+    console.warn('renderCanvas: canvas 或 image 尚未準備好')
+    return
+  }
   if (!ctx.value) ctx.value = canvas.value.getContext('2d')
   if (!ctx.value) return
 
@@ -91,30 +120,6 @@ const renderCanvas = () => {
     const y = padding.top + img.height + infoHeight / 2 + infoPadding / 2 - logoHeight / 2
     ctx.value.drawImage(logoImage.value, x, y, logoWidth, logoHeight)
   }
-}
-
-// 將圖片匯入Canvas
-const loadImageToCanvas = (url: string) => {
-  const img = new Image()
-  img.crossOrigin = 'anonymous'
-  img.onload = () => {
-    currentImage.value = img
-    renderCanvas()
-  }
-  img.src = url
-}
-
-// 圖片上傳
-const handleFileUpload = async (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (!file) return
-
-  // 直接呼叫通用的圖片處理函式
-  await processImage(file)
-
-  // 清空 input，才能再次選同一張圖片
-  target.value = ''
 }
 
 // 選擇圖片預覽的功能
@@ -202,7 +207,8 @@ const processImage = async (source: File | string) => {
   // 新增這行：同步到 store
   filterStore.setPreviewUrl(newPreviewUrl)
 
-  await nextTick()
+  await nextTick() // 等 v-if 切換，canvas 出現
+  await nextTick() // 再等一次，讓 ref 真正綁定完成
   // 設定當前顯示的資訊（重要！）
   currentPhotoInfo.value = photoInfoData
 
@@ -253,7 +259,7 @@ watch(
     />
 
     <!-- 無圖片時的上傳區（不變） -->
-    <div v-if="previewItems.length === 0" class="bg-white rounded-lg shadow p-4 w-full h-full">
+    <div v-show="previewItems.length === 0" class="bg-white rounded-lg shadow p-4 w-full h-full">
       <!-- 自訂樣式的 label -->
       <label
         for="image-upload"
@@ -267,7 +273,7 @@ watch(
     </div>
 
     <!-- 有圖片時的預覽 -->
-    <div v-else class="w-full h-full relative">
+    <div v-show="previewItems.length > 0" class="w-full h-full relative">
       <!-- 縮圖列 -->
       <div
         class="bg-white p-2 shadow-sm rounded-sm flex items-center justify-center gap-x-3 absolute -top-3 left-1/2 -translate-x-1/2"
