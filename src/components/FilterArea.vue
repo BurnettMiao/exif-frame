@@ -59,7 +59,7 @@ const selectedFilter = (index: number) => {
       >
         <div class="border border-gray-100 rounded-lg overflow-hidden w-full aspect-4/3 shadow-sm">
           <img
-            :src="filterStore.currentPreviewUrl ? filterStore.currentPreviewUrl : defaultBlur"
+            :src="filterStore.currentPreviewUrl || defaultBlur"
             :style="{ filter: filter.details }"
             class="w-full max-w-36.25 h-full object-cover"
             alt=""
@@ -73,41 +73,12 @@ const selectedFilter = (index: number) => {
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- 濾鏡按鈕範例 -->
-  <!-- <div
-        class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-white/90 p-2 rounded-full shadow"
-      >
-        <button
-          @click="applyFilter('none')"
-          class="px-4 py-1 text-sm rounded-full hover:bg-gray-100"
-        >
-          原圖
-        </button>
-        <button
-          @click="applyFilter('contrast(1.3) saturate(1.4)')"
-          class="px-4 py-1 text-sm rounded-full hover:bg-gray-100"
-        >
-          鮮豔
-        </button>
-        <button
-          @click="applyFilter('sepia(0.7)')"
-          class="px-4 py-1 text-sm rounded-full hover:bg-gray-100"
-        >
-          復古
-        </button>
-        <button
-          @click="applyFilter('grayscale(1)')"
-          class="px-4 py-1 text-sm rounded-full hover:bg-gray-100"
-        >
-          黑白
-        </button>
-        <button
-          @click="downloadImage"
-          class="px-4 py-1 text-sm rounded-full bg-blue-500 text-white"
-        >
-          下載
-        </button>
-      </div> -->
+    <!-- 濾鏡按鈕範例 -->
+    <div class="w-full pt-4">
+      <button class="w-full px-4 py-2 text-sm rounded-lg bg-gray-800 text-white cursor-pointer">
+        下載
+      </button>
+    </div>
+  </div>
 </template>

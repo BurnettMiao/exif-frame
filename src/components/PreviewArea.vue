@@ -143,6 +143,7 @@ const deleteImg = (index: number) => {
   if (previewItems.value.length === 0) {
     currentImage.value = null
     currentPhotoInfo.value = null
+    filterStore.currentPreviewUrl = ''
   } else {
     const newIndex = Math.min(index, previewItems.value.length - 1)
     currentPreviewIndex.value = newIndex
