@@ -48,7 +48,7 @@ const selectedFilter = (index: number) => {
 
 <template>
   <div
-    class="min-w-45 2xl:min-w-60 bg-white px-4 py-6 border-l border-l-gray-200 flex flex-col h-full overflow-hidden"
+    class="min-w-45 2xl:min-w-60 bg-white px-4 py-6 border-r border-r-gray-200 flex flex-col h-full overflow-hidden"
   >
     <div class="flex-1 overflow-y-scroll flex flex-col gap-y-4">
       <div
@@ -75,10 +75,10 @@ const selectedFilter = (index: number) => {
     </div>
 
     <!-- 濾鏡按鈕範例 -->
-    <div class="w-full pt-4">
+    <!-- <div class="w-full pt-4">
       <button class="w-full px-4 py-2 text-sm rounded-lg bg-gray-800 text-white cursor-pointer">
         下載
       </button>
-    </div>
+    </div> -->
   </div>
 </template>
