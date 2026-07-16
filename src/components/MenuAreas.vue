@@ -30,7 +30,7 @@ const handleSelected = (name: string) => {
 </script>
 
 <template>
-  <div class="flex items-start relative min-w-61.25">
+  <div class="flex items-start relative min-w-61.25 h-full">
     <div
       class="h-full py-4 px-2 flex flex-col gap-y-1 border-r border-gray-200 z-10 bg-white group w-16.25 hover:w-34.25 overflow-hidden transition-all ease-in-out duration-150"
     >
@@ -52,7 +52,7 @@ const handleSelected = (name: string) => {
       </div>
     </div>
 
-    <div class="absolute top-0 left-16.25">
+    <div class="absolute top-0 left-16.25 h-full">
       <FilterArea v-if="currentSelected === '濾鏡區'" />
     </div>
   </div>
