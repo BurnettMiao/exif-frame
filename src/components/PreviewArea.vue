@@ -245,6 +245,17 @@ watch(
   },
   { immediate: true },
 )
+
+// 監聽 store 的 triggerDownload
+watch(
+  () => filterStore.triggerDownload,
+  (newVal, oldVal) => {
+    if (newVal !== oldVal && newVal > 0) {
+      downloadImage()
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>

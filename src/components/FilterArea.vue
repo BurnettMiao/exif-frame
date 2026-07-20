@@ -73,12 +73,5 @@ const selectedFilter = (index: number) => {
         </div>
       </div>
     </div>
-
-    <!-- 濾鏡按鈕範例 -->
-    <!-- <div class="w-full pt-4">
-      <button class="w-full px-4 py-2 text-sm rounded-lg bg-gray-800 text-white cursor-pointer">
-        下載
-      </button>
-    </div> -->
   </div>
 </template>

@@ -7,6 +7,9 @@ export const useFilterStore = defineStore('filter', () => {
   const currentFilter = ref<string>('none')
   const currentPreviewUrl = ref<string>('')
 
+  // 用來觸發下載
+  const triggerDownload = ref(0) // 每次+1就觸發一次下載
+
   // 動作
   const setFilter = (filterValue: string) => {
     currentFilter.value = filterValue
@@ -20,11 +23,17 @@ export const useFilterStore = defineStore('filter', () => {
     currentFilter.value = 'none'
   }
 
+  const download = () => {
+    triggerDownload.value += 1
+  }
+
   return {
     currentFilter,
     currentPreviewUrl,
     setFilter,
     setPreviewUrl,
     resetFilter,
+    triggerDownload,
+    download,
   }
 })
