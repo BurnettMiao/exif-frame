@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import FilterArea from '@/components/FilterArea.vue'
+import LayoutArea from '@/components/LayoutArea.vue'
 
 type Menu = {
   icon: string
@@ -22,7 +23,7 @@ const menus = ref<Menu[]>([
   },
 ])
 
-const currentSelected = ref<string>('')
+const currentSelected = ref<string>('排版區')
 const handleSelected = (name: string) => {
   currentSelected.value = name
   console.log(currentSelected.value)
@@ -50,6 +51,10 @@ const handleSelected = (name: string) => {
           >{{ menu.name }}
         </span>
       </div>
+    </div>
+
+    <div class="absolute top-0 left-16.25 h-full">
+      <LayoutArea v-if="currentSelected === '排版區'" />
     </div>
 
     <div class="absolute top-0 left-16.25 h-full">

@@ -3,8 +3,10 @@ import { ref, nextTick, onMounted, watch } from 'vue'
 import ExifReader from 'exifreader'
 import type { PhotoInfo } from '@/types/previewArea'
 import { useFilterStore } from '@/stores/filter'
+import { useLayoutStore } from '@/stores/layout'
 
 const filterStore = useFilterStore()
+const layoutStore = useLayoutStore()
 
 import pic from '@/assets/DSC00255.jpg'
 import sony from '@/assets/logos/Sony_logo.svg'
@@ -18,17 +20,6 @@ const ctx = ref<CanvasRenderingContext2D | null>(null)
 const currentImage = ref<HTMLImageElement | null>(null)
 const currentFilter = ref<string>('none')
 const logoImage = ref<HTMLImageElement | null>(null)
-
-// 上下左右白邊
-const padding = {
-  top: 120,
-  right: 120,
-  bottom: 120,
-  left: 120,
-}
-
-// 文字之前間距
-const gap = 50
 
 // 圖片上傳
 const handleFileUpload = async (event: Event) => {
@@ -65,6 +56,10 @@ const renderCanvas = () => {
   if (!ctx.value) ctx.value = canvas.value.getContext('2d')
   if (!ctx.value) return
 
+  const layout = layoutStore.currentLayout
+  if (!layout) return
+  const { padding, gap, logoScale, infoPosition, logoPosition } = layout
+
   // ===== Cavas 照片＋info高度 =====
   const img = currentImage.value
   // 如果希望無論橫向直向都一致，可以用「較短的那一邊」
@@ -73,7 +68,7 @@ const renderCanvas = () => {
   const infoLineHeight = Math.round(baseSize * 0.03)
   // 2. 間距 = 圖片寬度的 4%（隨圖片尺寸變化）
   const infoPadding = Math.round(baseSize * 0.04)
-  // 3. 資訊區總高度 = 3 行文字 + 2 個間距（如果有的話）
+  // 3. 是否有資訊區
   const hasInfo = !!currentPhotoInfo.value && !currentPhotoInfo.value.error
   // 4. Canvas 總高度 = 圖片 + 上下邊距 + 資訊區
   const infoHeight = hasInfo ? infoLineHeight * 3 + infoPadding * 2 : 0
@@ -91,6 +86,40 @@ const renderCanvas = () => {
   ctx.value.drawImage(img, padding.left, padding.top, img.width, img.height)
   ctx.value.restore()
 
+  // 統一算好 Logo 尺寸，讓 EXIF 區塊也能用
+  const logoWidth = logoImage.value ? img.width * logoScale : 0
+  const logoHeight =
+    logoImage.value && logoWidth ? (logoImage.value.height / logoImage.value.width) * logoWidth : 0
+
+  // 畫 Logo (不受濾鏡影響)
+  if (logoImage.value) {
+    let x: number
+    let y: number
+
+    switch (logoPosition) {
+      case 'center':
+      case 'top-center':
+        x = (padding.left + img.width) / 2 - logoWidth / 2
+        break
+      case 'right':
+        x = padding.left + img.width - logoWidth
+        break
+      case 'left':
+      default:
+        x = padding.left
+    }
+
+    switch (logoPosition) {
+      case 'top-center':
+        y = (padding.left + img.width) / 2 - logoWidth / 2
+        break
+      default:
+        y = padding.top + img.height + padding.top + logoHeight / 3
+    }
+
+    ctx.value.drawImage(logoImage.value, x, y, logoWidth, logoHeight)
+  }
+
   // 畫 EXIF 資訊（不受濾鏡影響）
   if (hasInfo) {
     const info = currentPhotoInfo.value!
@@ -100,10 +129,30 @@ const renderCanvas = () => {
     ctx.value.textBaseline = 'top'
     ctx.value.textAlign = 'right'
 
-    const x = padding.left + img.width
-    let y = img.height + infoPadding + padding.top
-    // console.log(img.height, infoPadding, padding.top, infoLineHeight)
-    // ctx.value.fillText(`${info.date}`, x, y)
+    let x: number
+    switch (infoPosition) {
+      case 'left':
+        ctx.value.textAlign = 'left'
+        x = padding.left
+        break
+      case 'bottom-center':
+        ctx.value.textAlign = 'center'
+        x = padding.left + img.width / 2
+        break
+      default:
+        ctx.value.textAlign = 'right'
+        x = padding.left + img.width
+    }
+
+    let y: number
+    switch (infoPosition) {
+      case 'bottom-center':
+        y = img.height + infoPadding + padding.top + logoHeight + gap * 2
+        break
+      default:
+        y = img.height + infoPadding + padding.top
+    }
+
     y += infoLineHeight / 2
     ctx.value.font = `${infoLineHeight * 1.25}px monospace`
     ctx.value.fillText(`Shot on ${info.model}`, x, y)
@@ -111,15 +160,6 @@ const renderCanvas = () => {
     ctx.value.font = `${infoLineHeight}px monospace`
     ctx.value.fillStyle = '#C0C0C0'
     ctx.value.fillText(`${info.aperture} | ${info.exposure}s | ISO ${info.iso}`, x, y)
-  }
-
-  // 畫 Logo (不受濾鏡影響)
-  if (logoImage.value) {
-    const logoWidth = img.width * 0.15 // 設定 Logo 為圖片寬度的 15%
-    const logoHeight = (logoImage.value.height / logoImage.value.width) * logoWidth
-    const x = padding.left
-    const y = padding.top + img.height + infoHeight / 2 + infoPadding / 2 - logoHeight / 2
-    ctx.value.drawImage(logoImage.value, x, y, logoWidth, logoHeight)
   }
 }
 
@@ -256,6 +296,13 @@ watch(
     }
   },
   { immediate: true },
+)
+
+watch(
+  () => layoutStore.currentIndex,
+  () => {
+    renderCanvas()
+  },
 )
 </script>
 
