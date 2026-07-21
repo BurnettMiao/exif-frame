@@ -11,14 +11,14 @@ export const useLayoutStore = defineStore('layout', () => {
       gap: 50,
       infoPosition: 'right',
       logoPosition: 'left',
-      logoScale: 0.15,
+      logoScale: 0.18,
     },
     {
       name: '特殊規格一',
       padding: { top: 80, right: 80, bottom: 200, left: 80 },
       gap: 30,
       infoPosition: 'bottom-center',
-      logoPosition: 'center',
+      logoPosition: 'top-center',
       logoScale: 0.18,
     },
     {

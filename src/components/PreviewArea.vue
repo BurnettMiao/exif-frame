@@ -111,10 +111,10 @@ const renderCanvas = () => {
 
     switch (logoPosition) {
       case 'top-center':
-        y = (padding.left + img.width) / 2 - logoWidth / 2
+        y = padding.top + img.height + padding.top + logoHeight / 3
         break
       default:
-        y = padding.top + img.height + padding.top + logoHeight / 3
+        y = img.height + infoPadding + padding.top + infoPadding
     }
 
     ctx.value.drawImage(logoImage.value, x, y, logoWidth, logoHeight)
