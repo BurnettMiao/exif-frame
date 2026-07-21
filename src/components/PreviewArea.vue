@@ -99,7 +99,7 @@ const renderCanvas = () => {
     switch (logoPosition) {
       case 'center':
       case 'top-center':
-        x = (padding.left + img.width) / 2 - logoWidth / 2
+        x = padding.left + img.width / 2 - logoWidth / 2
         break
       case 'right':
         x = padding.left + img.width - logoWidth
@@ -111,7 +111,7 @@ const renderCanvas = () => {
 
     switch (logoPosition) {
       case 'top-center':
-        y = padding.top + img.height + padding.top + logoHeight / 3
+        y = padding.top + infoPadding + img.height
         break
       default:
         y = img.height + infoPadding + padding.top + infoPadding
@@ -147,7 +147,7 @@ const renderCanvas = () => {
     let y: number
     switch (infoPosition) {
       case 'bottom-center':
-        y = img.height + infoPadding + padding.top + logoHeight + gap * 2
+        y = img.height + infoPadding + padding.top + logoHeight + gap
         break
       default:
         y = img.height + infoPadding + padding.top
