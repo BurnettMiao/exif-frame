@@ -98,8 +98,11 @@ const renderCanvas = () => {
     // logo x position
     switch (logoPosition) {
       case 'center':
-      case 'top-center':
+      case 'center-top':
         x = padding.left + img.width / 2 - logoWidth / 2
+        break
+      case 'center-left':
+        x = padding.left - gap + img.width / 2 - logoWidth
         break
       case 'right':
         x = padding.left + img.width - logoWidth
@@ -110,8 +113,11 @@ const renderCanvas = () => {
     }
     // logo y position
     switch (logoPosition) {
-      case 'top-center':
+      case 'center-top':
         y = padding.top + infoPadding + img.height
+        break
+      case 'center-left':
+        y = padding.top + infoPadding + img.height + logoHeight / 2
         break
       default:
         y = img.height + infoPadding + padding.top + infoPadding
@@ -135,7 +141,11 @@ const renderCanvas = () => {
         ctx.value.textAlign = 'left'
         x = padding.left
         break
-      case 'bottom-center':
+      case 'center-right':
+        ctx.value.textAlign = 'left'
+        x = padding.left + gap + img.width / 2
+        break
+      case 'center-bottom':
         ctx.value.textAlign = 'center'
         x = padding.left + img.width / 2
         break
@@ -146,7 +156,7 @@ const renderCanvas = () => {
     // info y position
     let y: number
     switch (infoPosition) {
-      case 'bottom-center':
+      case 'center-bottom':
         y = img.height + infoPadding + padding.top + logoHeight + gap
         break
       default:
