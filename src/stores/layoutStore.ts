@@ -8,7 +8,7 @@ export const useLayoutStore = defineStore('layout', () => {
     {
       name: 'logo左 info右',
       padding: { top: 120, right: 120, bottom: 120, left: 120 },
-      gap: 50,
+      gap: 40,
       infoPosition: 'right',
       logoPosition: 'left',
       logoScale: 0.18,
@@ -32,7 +32,7 @@ export const useLayoutStore = defineStore('layout', () => {
     {
       name: 'logo上 info下',
       padding: { top: 120, right: 120, bottom: 120, left: 120 },
-      gap: 30,
+      gap: 40,
       infoPosition: 'center-bottom',
       logoPosition: 'center-top',
       logoScale: 0.18,
