@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useLayoutStore } from '@/stores/layout'
+import { useLayoutStore } from '@/stores/layoutStore'
 import defaultPic from '@/assets/DSC00255.jpg'
 
 const layoutStore = useLayoutStore()

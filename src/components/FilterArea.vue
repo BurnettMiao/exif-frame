@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useFilterStore } from '@/stores/filter'
+import { useFilterStore } from '@/stores/filterStore'
 import defaultBlur from '@/assets/default.jpg'
 
 type FilterOption = {

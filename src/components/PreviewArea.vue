@@ -2,8 +2,8 @@
 import { ref, nextTick, onMounted, watch } from 'vue'
 import ExifReader from 'exifreader'
 import type { PhotoInfo } from '@/types/previewArea'
-import { useFilterStore } from '@/stores/filter'
-import { useLayoutStore } from '@/stores/layout'
+import { useFilterStore } from '@/stores/filterStore'
+import { useLayoutStore } from '@/stores/layoutStore'
 
 const filterStore = useFilterStore()
 const layoutStore = useLayoutStore()
@@ -95,7 +95,7 @@ const renderCanvas = () => {
   if (logoImage.value) {
     let x: number
     let y: number
-
+    // logo x position
     switch (logoPosition) {
       case 'center':
       case 'top-center':
@@ -108,7 +108,7 @@ const renderCanvas = () => {
       default:
         x = padding.left
     }
-
+    // logo y position
     switch (logoPosition) {
       case 'top-center':
         y = padding.top + infoPadding + img.height
@@ -128,7 +128,7 @@ const renderCanvas = () => {
     ctx.value.font = `${infoLineHeight}px monospace`
     ctx.value.textBaseline = 'top'
     ctx.value.textAlign = 'right'
-
+    // info x position
     let x: number
     switch (infoPosition) {
       case 'left':
@@ -143,7 +143,7 @@ const renderCanvas = () => {
         ctx.value.textAlign = 'right'
         x = padding.left + img.width
     }
-
+    // info y position
     let y: number
     switch (infoPosition) {
       case 'bottom-center':

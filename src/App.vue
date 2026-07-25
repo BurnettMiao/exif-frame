@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import { useFilterStore } from '@/stores/filter'
+import { useFilterStore } from '@/stores/filterStore'
 
 const filterStore = useFilterStore()
 
