@@ -242,6 +242,7 @@ const processImage = async (source: File | string) => {
       exposure: tags['ExposureTime']?.description || '未知快門',
       aperture: tags['FNumber']?.description || '未知光圈',
       iso: tags['ISOSpeedRatings']?.description || '未知ISO',
+      make: tags['Make']?.description || '未知ISO',
     }
   } catch (error) {
     console.error('Exif 讀取失敗', error)
