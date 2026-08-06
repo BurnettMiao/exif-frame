@@ -7,7 +7,7 @@ export const useLayoutStore = defineStore('layout', () => {
   const layouts = ref<FrameLayout[]>([
     {
       name: 'logo左 info右',
-      padding: { top: 120, right: 120, bottom: 120, left: 120 },
+      padding: { top: 0.15, right: 0.02, bottom: 0.15, left: 0.02 },
       gap: 40,
       infoPosition: 'right',
       logoPosition: 'left',
@@ -15,7 +15,7 @@ export const useLayoutStore = defineStore('layout', () => {
     },
     {
       name: 'logo右 info左',
-      padding: { top: 120, right: 120, bottom: 120, left: 120 },
+      padding: { top: 0.15, right: 0.02, bottom: 0.15, left: 0.02 },
       gap: 40,
       infoPosition: 'left',
       logoPosition: 'right',
@@ -23,7 +23,7 @@ export const useLayoutStore = defineStore('layout', () => {
     },
     {
       name: 'logo中 info中',
-      padding: { top: 120, right: 120, bottom: 120, left: 120 },
+      padding: { top: 0.15, right: 0.02, bottom: 0.15, left: 0.02 },
       gap: 40,
       infoPosition: 'center-right',
       logoPosition: 'center-left',
@@ -31,7 +31,7 @@ export const useLayoutStore = defineStore('layout', () => {
     },
     {
       name: 'logo上 info下',
-      padding: { top: 120, right: 120, bottom: 120, left: 120 },
+      padding: { top: 0.15, right: 0.02, bottom: 0.15, left: 0.02 },
       gap: 40,
       infoPosition: 'center-bottom',
       logoPosition: 'center-top',

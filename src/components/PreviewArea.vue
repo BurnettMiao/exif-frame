@@ -70,7 +70,7 @@ const renderCanvas = () => {
   const infoPadding = Math.round(baseSize * 0.04)
   // 3. 是否有資訊區
   const hasInfo = !!currentPhotoInfo.value && !currentPhotoInfo.value.error
-  // 4. Canvas 總高度 = 圖片 + 上下邊距 + 資訊區
+  // 4. 資訊區
   const infoHeight = hasInfo ? infoLineHeight * 3 + infoPadding * 2 : 0
 
   canvas.value.width = img.width + padding.left + padding.right
