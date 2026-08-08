@@ -58,23 +58,32 @@ const renderCanvas = () => {
 
   const layout = layoutStore.currentLayout
   if (!layout) return
-  const { padding, gap, logoScale, infoPosition, logoPosition } = layout
+  const { padding, gapRatio, logoScale, infoPosition, logoPosition } = layout
 
-  // ===== Cavas 照片＋info高度 =====
+  // ===== Canvas 照片＋info高度（全部依圖片寬度比例計算）=====
   const img = currentImage.value
-  // 如果希望無論橫向直向都一致，可以用「較短的那一邊」
-  const baseSize = Math.min(img.width, img.height)
-  // 1. 字體大小 = 圖片寬度的 3%（隨圖片尺寸變化）
-  const infoLineHeight = Math.round(baseSize * 0.03)
-  // 2. 間距 = 圖片寬度的 4%（隨圖片尺寸變化）
-  const infoPadding = Math.round(baseSize * 0.04)
+  // 1. 字體大小 = 圖片寬度的 3%
+  const infoLineHeight = Math.round(img.width * 0.03)
+  // 2. 間距 = 圖片寬度的 4%
+  const infoPadding = Math.round(img.width * 0.04)
+
+  // ★★★ Padding 改為比例值（例如 0.15 = 圖片寬度的 15%）★★★
+  const padTop = Math.round(img.width * padding.top)
+  const padBottom = Math.round(img.width * padding.bottom)
+  const padLeft = Math.round(img.width * padding.left)
+  const padRight = Math.round(img.width * padding.right)
+
+  // Gap 也改為比例值
+  const gap = Math.round(img.width * gapRatio)
+
   // 3. 是否有資訊區
   const hasInfo = !!currentPhotoInfo.value && !currentPhotoInfo.value.error
   // 4. 資訊區
   const infoHeight = hasInfo ? infoLineHeight * 3 + infoPadding * 2 : 0
 
-  canvas.value.width = img.width + padding.left + padding.right
-  canvas.value.height = img.height + padding.top + padding.bottom + infoHeight
+  // ***** 此處為全部 canvas 最後的高度與寬度 *****
+  canvas.value.width = img.width + padLeft + padRight
+  canvas.value.height = img.height + padTop + padBottom + infoHeight
 
   // 底色（避免 jpg 匯出時資訊區變黑）
   ctx.value.fillStyle = '#ffffff'
@@ -83,7 +92,7 @@ const renderCanvas = () => {
   // 畫照片（套用濾鏡）
   ctx.value.save()
   ctx.value.filter = currentFilter.value
-  ctx.value.drawImage(img, padding.left, padding.top, img.width, img.height)
+  ctx.value.drawImage(img, padLeft, padTop, img.width, img.height)
   ctx.value.restore()
 
   // 統一算好 Logo 尺寸，讓 EXIF 區塊也能用
@@ -99,28 +108,28 @@ const renderCanvas = () => {
     switch (logoPosition) {
       case 'center':
       case 'center-top':
-        x = padding.left + img.width / 2 - logoWidth / 2
+        x = padLeft + img.width / 2 - logoWidth / 2
         break
       case 'center-left':
-        x = padding.left - gap + img.width / 2 - logoWidth
+        x = padLeft - gap + img.width / 2 - logoWidth
         break
       case 'right':
-        x = padding.left + img.width - logoWidth
+        x = padLeft + img.width - logoWidth
         break
       case 'left':
       default:
-        x = padding.left
+        x = padLeft
     }
     // logo y position
     switch (logoPosition) {
       case 'center-top':
-        y = padding.top + infoPadding + img.height
+        y = padTop + infoPadding + img.height
         break
       case 'center-left':
-        y = padding.top + infoPadding + img.height + logoHeight / 2
+        y = padTop + infoPadding + img.height + logoHeight / 2
         break
       default:
-        y = img.height + infoPadding + padding.top + infoPadding
+        y = img.height + infoPadding + padTop + infoPadding
     }
 
     ctx.value.drawImage(logoImage.value, x, y, logoWidth, logoHeight)
@@ -139,28 +148,28 @@ const renderCanvas = () => {
     switch (infoPosition) {
       case 'left':
         ctx.value.textAlign = 'left'
-        x = padding.left
+        x = padLeft
         break
       case 'center-right':
         ctx.value.textAlign = 'left'
-        x = padding.left + gap + img.width / 2
+        x = padLeft + gap + img.width / 2
         break
       case 'center-bottom':
         ctx.value.textAlign = 'center'
-        x = padding.left + img.width / 2
+        x = padLeft + img.width / 2
         break
       default:
         ctx.value.textAlign = 'right'
-        x = padding.left + img.width
+        x = padLeft + img.width
     }
     // info y position
     let y: number
     switch (infoPosition) {
       case 'center-bottom':
-        y = img.height + infoPadding + padding.top + logoHeight + gap
+        y = img.height + infoPadding + padTop + logoHeight + gap
         break
       default:
-        y = img.height + infoPadding + padding.top
+        y = img.height + infoPadding + padTop
     }
 
     y += infoLineHeight / 2
