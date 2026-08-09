@@ -183,48 +183,7 @@ const renderCanvas = () => {
   }
 }
 
-// 選擇圖片預覽的功能
-const selectedPreview = (index: number) => {
-  currentPreviewIndex.value = index
-  const item = previewItems.value[index]
-  if (!item) return
-  loadImageToCanvas(item.url)
-  filterStore.setPreviewUrl(item.url)
-
-  // 重要：切換時更新 photoInfo
-  currentPhotoInfo.value = item.info
-  renderCanvas()
-}
-
-// 刪除圖片功能
-const deleteImg = (index: number) => {
-  // 呼叫 URL.revokeObjectURL() 釋放它，避免不必要的記憶體占用。
-  const deletedItem = previewItems.value[index]
-  if (deletedItem?.url) {
-    URL.revokeObjectURL(deletedItem.url)
-  }
-
-  previewItems.value.splice(index, 1)
-
-  if (previewItems.value.length === 0) {
-    currentImage.value = null
-    currentPhotoInfo.value = null
-    filterStore.currentPreviewUrl = ''
-  } else {
-    const newIndex = Math.min(index, previewItems.value.length - 1)
-    currentPreviewIndex.value = newIndex
-    const item = previewItems.value[newIndex]
-
-    if (item) {
-      loadImageToCanvas(item.url)
-      filterStore.setPreviewUrl(item.url)
-      currentPhotoInfo.value = item.info
-      renderCanvas()
-    }
-  }
-}
-
-// 讀取圖片資訊
+// 讀取圖片資訊與壓縮圖片
 const processImage = async (source: File | string) => {
   let file: File
 
@@ -282,6 +241,47 @@ const processImage = async (source: File | string) => {
 
   // 載入圖片 → onload 會自動 renderCanvas()
   loadImageToCanvas(newPreviewUrl)
+}
+
+// 選擇圖片預覽的功能
+const selectedPreview = (index: number) => {
+  currentPreviewIndex.value = index
+  const item = previewItems.value[index]
+  if (!item) return
+  loadImageToCanvas(item.url)
+  filterStore.setPreviewUrl(item.url)
+
+  // 重要：切換時更新 photoInfo
+  currentPhotoInfo.value = item.info
+  renderCanvas()
+}
+
+// 刪除圖片功能
+const deleteImg = (index: number) => {
+  // 呼叫 URL.revokeObjectURL() 釋放它，避免不必要的記憶體占用。
+  const deletedItem = previewItems.value[index]
+  if (deletedItem?.url) {
+    URL.revokeObjectURL(deletedItem.url)
+  }
+
+  previewItems.value.splice(index, 1)
+
+  if (previewItems.value.length === 0) {
+    currentImage.value = null
+    currentPhotoInfo.value = null
+    filterStore.currentPreviewUrl = ''
+  } else {
+    const newIndex = Math.min(index, previewItems.value.length - 1)
+    currentPreviewIndex.value = newIndex
+    const item = previewItems.value[newIndex]
+
+    if (item) {
+      loadImageToCanvas(item.url)
+      filterStore.setPreviewUrl(item.url)
+      currentPhotoInfo.value = item.info
+      renderCanvas()
+    }
+  }
 }
 
 // 匯出：直接存畫面上的 canvas，不用再另外組合
