@@ -174,8 +174,8 @@ const renderCanvas = () => {
 
     y += infoLineHeight / 2
     ctx.value.font = `${infoLineHeight * 1.25}px monospace`
-    ctx.value.fillText(`Shot on ${info.model}`, x, y)
-    y += infoLineHeight * 0.8 + gap
+    ctx.value.fillText(`Shot on ${info.make}`, x, y)
+    y += gap
     ctx.value.font = `${infoLineHeight}px monospace`
     ctx.value.fillStyle = '#C0C0C0'
     ctx.value.fillText(`${info.aperture} | ${info.exposure}s | ISO ${info.iso}`, x, y)
