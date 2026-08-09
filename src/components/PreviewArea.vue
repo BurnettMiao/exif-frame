@@ -4,6 +4,7 @@ import ExifReader from 'exifreader'
 import type { PhotoInfo } from '@/types/previewArea'
 import { useFilterStore } from '@/stores/filterStore'
 import { useLayoutStore } from '@/stores/layoutStore'
+import { compressImage } from '@/utils/imageUtils'
 
 const filterStore = useFilterStore()
 const layoutStore = useLayoutStore()
@@ -228,20 +229,15 @@ const processImage = async (source: File | string) => {
   let file: File
 
   if (typeof source === 'string') {
-    // 如果是網址（例如預載入的 pic），先 fetch 轉成 blob 再轉成 File
     const response = await fetch(source)
     const blob = await response.blob()
-    // 為了讓 ExifReader 能讀取，我們給它一個檔名
     file = new File([blob], 'preload-img.jpg', { type: blob.type })
   } else {
-    // 如果原本就是 File 物件（使用者上傳的）
     file = source
   }
 
-  // --- 以下是原本 handleFileUpload 的核心邏輯 ---
-  const newPreviewUrl = URL.createObjectURL(file)
+  // ★★★ Step 1：先讀 EXIF（原始檔案才有資料）★★★
   let photoInfoData: PhotoInfo | null = null
-
   try {
     const tags = await ExifReader.load(file)
     console.log('上傳圖片資訊', tags)
@@ -251,26 +247,37 @@ const processImage = async (source: File | string) => {
       exposure: tags['ExposureTime']?.description || '未知快門',
       aperture: tags['FNumber']?.description || '未知光圈',
       iso: tags['ISOSpeedRatings']?.description || '未知ISO',
-      make: tags['Make']?.description || '未知ISO',
+      make: tags['Make']?.description || '未知廠牌',
     }
   } catch (error) {
     console.error('Exif 讀取失敗', error)
     photoInfoData = { error: '無法讀取此照片的 EXIF 資訊' }
   }
 
-  // 加入預覽清單
+  // ★★★ Step 2：再壓縮（EXIF 已經讀完了，丟失也沒關係）★★★
+  let processedBlob: Blob
+  try {
+    processedBlob = await compressImage(file, 1920)
+  } catch (error) {
+    console.error('縮圖失敗，使用原始檔案', error)
+    processedBlob = file // 失敗就退回原檔
+  }
+
+  // ★★★ Step 3：用壓縮後的 blob 產生 URL★★★
+  const newPreviewUrl = URL.createObjectURL(processedBlob)
+
+  // Step 4：加入預覽清單
   previewItems.value.push({
     url: newPreviewUrl,
     info: photoInfoData,
   })
 
   currentPreviewIndex.value = previewItems.value.length - 1
-  // 新增這行：同步到 store
   filterStore.setPreviewUrl(newPreviewUrl)
 
-  await nextTick() // 等 v-if 切換，canvas 出現
-  await nextTick() // 再等一次，讓 ref 真正綁定完成
-  // 設定當前顯示的資訊（重要！）
+  await nextTick() // 等 canvas 出現
+  await nextTick() // 等 ref 綁定完成
+
   currentPhotoInfo.value = photoInfoData
 
   // 載入圖片 → onload 會自動 renderCanvas()
