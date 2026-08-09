@@ -12,7 +12,7 @@ const selectedLayout = (index: number) => {
 
 <template>
   <div
-    class="min-w-45 2xl:min-w-60 bg-white px-4 py-6 border-r border-r-gray-200 flex flex-col h-full overflow-hidden"
+    class="min-w-45 w-full 2xl:max-w-60 bg-white px-4 py-6 border-r border-r-gray-200 flex flex-col h-full overflow-hidden"
   >
     <div class="flex-1 overflow-y-scroll flex flex-col gap-y-4">
       <div
