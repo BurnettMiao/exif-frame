@@ -15,3 +15,18 @@
   const url = URL.createObjectURL(blob)
   就可以下載，不需要重新處理一次圖片。
   我覺得你這個方向是對的，而且架構上也很乾淨。下一步我會挑戰你一個功能：在 processImage() 裡加入 EXIF 方向修正（iPhone 直拍橫掉的問題），這是很多圖片網站最容易忽略的一步，也是很值得練的。
+
+**參考的網站**
+
+- https://frameelf.com/
+- https://exiframe.app/
+- https://www.framemark.space/
+- https://alexvareloraw.site/image/rqLRMxT2Qpo
+- https://app.chexif.com/
+- https://exif-frame.yuru.cam/
+- https://www.canva.com/
+- https://pixlr.com/express/
+- https://exifframe.org/editor
+- https://www.befunky.com/create/
+- https://instantpolaroid.com/
+-
