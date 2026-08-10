@@ -112,7 +112,7 @@ const renderCanvas = () => {
         x = padLeft + img.width / 2 - logoWidth / 2
         break
       case 'center-left':
-        x = padLeft - gap + img.width / 2 - logoWidth
+        x = padLeft + img.width / 2 - logoWidth - gap / 2
         break
       case 'right':
         x = padLeft + img.width - logoWidth
@@ -124,13 +124,13 @@ const renderCanvas = () => {
     // logo y position
     switch (logoPosition) {
       case 'center-top':
-        y = padTop + infoPadding + img.height
+        y = padTop + img.height + infoPadding
         break
-      case 'center-left':
-        y = padTop + infoPadding + img.height + logoHeight / 2
+        // case 'center-left':
+        //   y = padTop + img.height + infoPadding + infoPadding
         break
       default:
-        y = img.height + infoPadding + padTop + infoPadding
+        y = padTop + img.height + infoPadding + infoPadding
     }
 
     ctx.value.drawImage(logoImage.value, x, y, logoWidth, logoHeight)
@@ -144,6 +144,7 @@ const renderCanvas = () => {
     ctx.value.font = `${infoLineHeight}px monospace`
     ctx.value.textBaseline = 'top'
     ctx.value.textAlign = 'right'
+
     // info x position
     let x: number
     switch (infoPosition) {
@@ -153,7 +154,7 @@ const renderCanvas = () => {
         break
       case 'center-right':
         ctx.value.textAlign = 'left'
-        x = padLeft + gap + img.width / 2
+        x = padLeft + gap / 2 + img.width / 2
         break
       case 'center-bottom':
         ctx.value.textAlign = 'center'
@@ -167,10 +168,12 @@ const renderCanvas = () => {
     let y: number
     switch (infoPosition) {
       case 'center-bottom':
-        y = img.height + infoPadding + logoHeight + gap
+        y = padTop + img.height + infoPadding + logoHeight + infoPadding / 2
         break
+      case 'center-right':
+        y = padTop + img.height + infoHeight
       default:
-        y = img.height + infoPadding + padTop
+        y = padTop + img.height + infoPadding
     }
 
     y += infoLineHeight / 2
