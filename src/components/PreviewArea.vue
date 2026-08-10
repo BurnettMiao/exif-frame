@@ -167,7 +167,7 @@ const renderCanvas = () => {
     let y: number
     switch (infoPosition) {
       case 'center-bottom':
-        y = img.height + infoPadding + padTop + logoHeight + gap
+        y = img.height + infoPadding + logoHeight + gap
         break
       default:
         y = img.height + infoPadding + padTop
