@@ -63,19 +63,20 @@ const renderCanvas = () => {
 
   // ===== Canvas 照片＋info高度（全部依圖片最大值比例計算）=====
   const img = currentImage.value
+  const base = Math.max(img.width, img.height)
   // 1. 字體大小 = 圖片最大值的 3%
-  const infoLineHeight = Math.round(Math.max(img.width, img.width) * 0.03)
+  const infoLineHeight = Math.round(base * 0.03)
   // 2. 間距 = 圖片最大值的 4%
-  const infoPadding = Math.round(Math.max(img.width, img.width) * 0.04)
+  const infoPadding = Math.round(base * 0.04)
 
   // ★★★ Padding 改為比例值（例如 0.15 = 圖片最大值的 15%）★★★
-  const padTop = Math.round(Math.max(img.width, img.width) * padding.top)
-  const padBottom = Math.round(Math.max(img.width, img.width) * padding.bottom)
-  const padLeft = Math.round(Math.max(img.width, img.width) * padding.left)
-  const padRight = Math.round(Math.max(img.width, img.width) * padding.right)
+  const padTop = Math.round(base * padding.top)
+  const padBottom = Math.round(base * padding.bottom)
+  const padLeft = Math.round(base * padding.left)
+  const padRight = Math.round(base * padding.right)
 
   // Gap 也改為比例值
-  const gap = Math.round(Math.max(img.width, img.width) * gapRatio)
+  const gap = Math.round(base * gapRatio)
 
   // 3. 是否有資訊區
   const hasInfo = !!currentPhotoInfo.value && !currentPhotoInfo.value.error
