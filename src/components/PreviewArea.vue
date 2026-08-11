@@ -97,8 +97,8 @@ const renderCanvas = () => {
   ctx.value.drawImage(img, padLeft, padTop, img.width, img.height)
   ctx.value.restore()
 
-  // 統一算好 Logo 尺寸，讓 EXIF 區塊也能用
-  const logoWidth = logoImage.value ? img.width * logoScale : 0
+  // 統一算好 Logo 尺寸（使用 base，讓 logo 跟圖片最大邊比例一致）
+  const logoWidth = logoImage.value ? base * logoScale : 0
   const logoHeight =
     logoImage.value && logoWidth ? (logoImage.value.height / logoImage.value.width) * logoWidth : 0
 
