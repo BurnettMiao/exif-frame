@@ -10,7 +10,10 @@ const filterStore = useFilterStore()
 const layoutStore = useLayoutStore()
 
 import pic from '@/assets/DSC00255.jpg'
-import sony from '@/assets/logos/Sony_logo.svg'
+import brandSony from '@/assets/logos/sony_logo.svg'
+import brandFuji from '@/assets/logos/fujifilm_logo.svg'
+import brandCanon from '@/assets/logos/canon_logos.svg'
+import brandNikon from '@/assets/logos/nikon_logo.svg'
 
 const currentPhotoInfo = ref<PhotoInfo | null>(null)
 const previewItems = ref<{ url: string; info: PhotoInfo }[]>([]) // 改為物件陣列
@@ -245,6 +248,8 @@ const processImage = async (source: File | string) => {
 
   // 載入圖片 → onload 會自動 renderCanvas()
   loadImageToCanvas(newPreviewUrl)
+  // 呼叫圖片對應的 logo
+  loadLogoImg(photoInfoData.make ?? '')
 }
 
 // 選擇圖片預覽的功能
@@ -254,6 +259,7 @@ const selectedPreview = (index: number) => {
   if (!item) return
   loadImageToCanvas(item.url)
   filterStore.setPreviewUrl(item.url)
+  loadLogoImg(item.info.make ?? '')
 
   // 重要：切換時更新 photoInfo
   currentPhotoInfo.value = item.info
@@ -280,6 +286,7 @@ const deleteImg = (index: number) => {
     const item = previewItems.value[newIndex]
 
     if (item) {
+      loadLogoImg(item.info.make ?? '')
       loadImageToCanvas(item.url)
       filterStore.setPreviewUrl(item.url)
       currentPhotoInfo.value = item.info
@@ -297,15 +304,35 @@ const downloadImage = () => {
   link.click()
 }
 
-// 預先載入logo 與 測試圖片
-onMounted(() => {
+// 載入照片對應的 logo function
+function loadLogoImg(brand: string) {
   const logo = new Image()
   logo.crossOrigin = 'anonymous'
-  logo.src = sony
-  logo.onload = () => {
-    logoImage.value = logo
+
+  switch (brand) {
+    case 'SONY':
+      logo.src = brandSony
+      break
+    case 'NIKON CORPORATION':
+      logo.src = brandNikon
+      break
+    case 'Canon':
+      logo.src = brandCanon
+      break
+    case 'FUJIFILM':
+      logo.src = brandFuji
+      break
   }
 
+  // logo.src = sony
+  logo.onload = () => {
+    logoImage.value = logo
+    renderCanvas()
+  }
+}
+
+// 預先載入logo 與 測試圖片
+onMounted(() => {
   processImage(pic)
 })
 
