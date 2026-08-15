@@ -213,7 +213,7 @@ const processImage = async (source: File | string) => {
       exposure: tags['ExposureTime']?.description || '未知快門',
       aperture: tags['FNumber']?.description || '未知光圈',
       iso: tags['ISOSpeedRatings']?.description || '未知ISO',
-      make: tags['Make']?.description || '未知廠牌',
+      make: tags['Make']?.description.split(' ')[0] || '未知廠牌',
     }
   } catch (error) {
     console.error('Exif 讀取失敗', error)
@@ -309,19 +309,31 @@ function loadLogoImg(brand: string) {
   const logo = new Image()
   logo.crossOrigin = 'anonymous'
 
+  // 新增是否匹配到廠牌
+  let matched = false
   switch (brand) {
     case 'SONY':
       logo.src = brandSony
+      matched = true
       break
     case 'NIKON CORPORATION':
       logo.src = brandNikon
+      matched = true
       break
     case 'Canon':
       logo.src = brandCanon
+      matched = true
       break
     case 'FUJIFILM':
       logo.src = brandFuji
+      matched = true
       break
+  }
+
+  if (!matched) {
+    logoImage.value = null
+    renderCanvas()
+    return
   }
 
   // logo.src = sony
