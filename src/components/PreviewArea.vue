@@ -14,6 +14,7 @@ import brandSony from '@/assets/logos/sony_logo.svg'
 import brandFuji from '@/assets/logos/fujifilm_logo.svg'
 import brandCanon from '@/assets/logos/canon_logos.svg'
 import brandNikon from '@/assets/logos/nikon_logo.svg'
+import brandApple from '@/assets/logos/apple_logo.svg'
 
 const currentPhotoInfo = ref<PhotoInfo | null>(null)
 const previewItems = ref<{ url: string; info: PhotoInfo }[]>([]) // 改為物件陣列
@@ -176,6 +177,7 @@ const renderCanvas = () => {
         break
       case 'center-right':
         y = padTop + img.height + infoHeight
+        break
       default:
         y = padTop + img.height + infoPadding
     }
@@ -326,6 +328,10 @@ function loadLogoImg(brand: string) {
       break
     case 'FUJIFILM':
       logo.src = brandFuji
+      matched = true
+      break
+    case 'Apple':
+      logo.src = brandApple
       matched = true
       break
   }
