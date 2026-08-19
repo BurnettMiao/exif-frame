@@ -12,7 +12,7 @@ const layoutStore = useLayoutStore()
 import pic from '@/assets/DSC00255.jpg'
 import brandSony from '@/assets/logos/sony_logo.svg'
 import brandFuji from '@/assets/logos/fujifilm_logo.svg'
-import brandCanon from '@/assets/logos/canon_logos.svg'
+import brandCanon from '@/assets/logos/canon_logo.svg'
 import brandNikon from '@/assets/logos/nikon_logo.svg'
 import brandApple from '@/assets/logos/apple_logo.svg'
 
@@ -102,9 +102,19 @@ const renderCanvas = () => {
   ctx.value.restore()
 
   // 統一算好 Logo 尺寸（使用 base，讓 logo 跟圖片最大邊比例一致）
-  const logoWidth = logoImage.value ? base * logoScale : 0
-  const logoHeight =
+  let logoWidth = logoImage.value ? base * logoScale : 0
+  let logoHeight =
     logoImage.value && logoWidth ? (logoImage.value.height / logoImage.value.width) * logoWidth : 0
+
+  // Logo 高度最大不超過 infoHeight
+  const maxLogoHeight = infoHeight - infoPadding * 2.4
+  console.log('logo最高的高度為：', maxLogoHeight)
+  if (logoHeight > maxLogoHeight) {
+    const aspectRatio = logoImage.value ? logoImage.value.height / logoImage.value.width : 1
+    logoHeight = maxLogoHeight
+    logoWidth = maxLogoHeight / aspectRatio
+  }
+  console.log('目前logo高度為：', logoHeight)
 
   // 畫 Logo (不受濾鏡影響)
   if (logoImage.value) {
@@ -131,11 +141,8 @@ const renderCanvas = () => {
       case 'center-top':
         y = padTop + img.height + infoPadding
         break
-        // case 'center-left':
-        //   y = padTop + img.height + infoPadding + infoPadding
-        break
       default:
-        y = padTop + img.height + infoPadding + infoPadding
+        y = padTop + img.height + infoPadding + infoLineHeight / 2
     }
 
     ctx.value.drawImage(logoImage.value, x, y, logoWidth, logoHeight)
@@ -176,7 +183,7 @@ const renderCanvas = () => {
         y = padTop + img.height + infoPadding + logoHeight + infoPadding / 2
         break
       case 'center-right':
-        y = padTop + img.height + infoHeight
+        y = padTop + img.height + infoPadding
         break
       default:
         y = padTop + img.height + infoPadding
@@ -318,7 +325,7 @@ function loadLogoImg(brand: string) {
       logo.src = brandSony
       matched = true
       break
-    case 'NIKON CORPORATION':
+    case 'NIKON':
       logo.src = brandNikon
       matched = true
       break
