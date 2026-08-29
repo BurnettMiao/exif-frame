@@ -1,30 +1,64 @@
 <script setup lang="ts">
-import { ref, nextTick, onMounted, watch } from 'vue'
-import ExifReader from 'exifreader'
-import type { PhotoInfo } from '@/types/previewArea'
+import { ref, onMounted, watch } from 'vue'
 import { useFilterStore } from '@/stores/filterStore'
 import { useLayoutStore } from '@/stores/layoutStore'
-import { compressImage } from '@/utils/imageUtils'
+import { usePhotoCollection } from '@/composables/usePhotoCollection'
+import { renderFrame } from '@/utils/renderEngine'
+import { loadBrandLogo } from '@/utils/brandLogos'
+import ThumbnailStrip from '@/components/ThumbnailStrip.vue'
+
+import pic from '@/assets/DSC00255.jpg'
 
 const filterStore = useFilterStore()
 const layoutStore = useLayoutStore()
 
-import pic from '@/assets/DSC00255.jpg'
-import brandSony from '@/assets/logos/sony_logo.svg'
-import brandFuji from '@/assets/logos/fujifilm_logo.svg'
-import brandCanon from '@/assets/logos/canon_logo.svg'
-import brandNikon from '@/assets/logos/nikon_logo.svg'
-import brandApple from '@/assets/logos/apple_logo.svg'
-
-const currentPhotoInfo = ref<PhotoInfo | null>(null)
-const previewItems = ref<{ url: string; info: PhotoInfo }[]>([]) // 改為物件陣列
-const currentPreviewIndex = ref<number>(0)
+const { previewItems, currentPreviewIndex, activeItem, addPhoto, selectPhoto, deletePhoto } =
+  usePhotoCollection()
 
 const canvas = ref<HTMLCanvasElement | null>(null)
-const ctx = ref<CanvasRenderingContext2D | null>(null)
 const currentImage = ref<HTMLImageElement | null>(null)
-const currentFilter = ref<string>('none')
 const logoImage = ref<HTMLImageElement | null>(null)
+const currentFilter = ref<string>('none')
+
+// 統一的繪製入口：畫面上看到的，就是最終匯出的樣子
+const render = () => {
+  if (!canvas.value || !currentImage.value) return
+  renderFrame({
+    canvas: canvas.value,
+    image: currentImage.value,
+    layout: layoutStore.currentLayout,
+    info: activeItem.value?.info ?? null,
+    logo: logoImage.value,
+    filter: currentFilter.value,
+  })
+}
+
+// 目前照片變更時：載入圖片與對應廠牌 logo（token 防止快速切換時舊請求覆蓋新照片）
+let loadToken = 0
+watch(activeItem, (item) => {
+  const token = ++loadToken
+
+  if (!item) {
+    currentImage.value = null
+    logoImage.value = null
+    return
+  }
+
+  loadBrandLogo(item.info.make ?? '').then((logo) => {
+    if (token !== loadToken) return
+    logoImage.value = logo
+    render()
+  })
+
+  const img = new Image()
+  img.crossOrigin = 'anonymous'
+  img.onload = () => {
+    if (token !== loadToken) return
+    currentImage.value = img
+    render()
+  }
+  img.src = item.url
+})
 
 // 圖片上傳
 const handleFileUpload = async (event: Event) => {
@@ -32,276 +66,10 @@ const handleFileUpload = async (event: Event) => {
   const file = target.files?.[0]
   if (!file) return
 
-  // 直接呼叫通用的圖片處理函式
-  await processImage(file)
+  await addPhoto(file)
 
   // 清空 input，才能再次選同一張圖片
   target.value = ''
-}
-
-// 將圖片匯入Canvas
-const loadImageToCanvas = (url: string) => {
-  const img = new Image()
-  img.crossOrigin = 'anonymous'
-  img.onload = async () => {
-    currentImage.value = img
-    // 多等一次，確保 canvas ref 可用
-    await nextTick()
-    renderCanvas()
-  }
-  img.src = url
-}
-
-// 統一的繪製函式：畫面上看到的，就是最終匯出的樣子
-const renderCanvas = () => {
-  if (!canvas.value || !currentImage.value) {
-    console.warn('renderCanvas: canvas 或 image 尚未準備好')
-    return
-  }
-  if (!ctx.value) ctx.value = canvas.value.getContext('2d')
-  if (!ctx.value) return
-
-  const layout = layoutStore.currentLayout
-  if (!layout) return
-  const { padding, gapRatio, logoScale, infoPosition, logoPosition } = layout
-
-  // ===== Canvas 照片＋info高度（全部依圖片最大值比例計算）=====
-  const img = currentImage.value
-  const base = Math.max(img.width, img.height)
-  // 1. 字體大小 = 圖片最大值的 3%
-  const infoLineHeight = Math.round(base * 0.03)
-  // 2. 間距 = 圖片最大值的 4%
-  const infoPadding = Math.round(base * 0.04)
-
-  // ★★★ Padding 改為比例值（例如 0.15 = 圖片最大值的 15%）★★★
-  const padTop = Math.round(base * padding.top)
-  const padBottom = Math.round(base * padding.bottom)
-  const padLeft = Math.round(base * padding.left)
-  const padRight = Math.round(base * padding.right)
-
-  // Gap 也改為比例值
-  const gap = Math.round(base * gapRatio)
-
-  // 3. 是否有資訊區
-  const hasInfo = !!currentPhotoInfo.value && !currentPhotoInfo.value.error
-  // 4. 資訊區
-  const infoHeight = hasInfo ? infoLineHeight * 3 + infoPadding * 2 : 0
-
-  // ***** 此處為全部 canvas 最後的高度與寬度 *****
-  canvas.value.width = img.width + padLeft + padRight
-  canvas.value.height = img.height + padTop + padBottom + infoHeight
-
-  // 底色（避免 jpg 匯出時資訊區變黑）
-  ctx.value.fillStyle = '#ffffff'
-  ctx.value.fillRect(0, 0, canvas.value.width, canvas.value.height)
-
-  // 畫照片（套用濾鏡）
-  ctx.value.save()
-  ctx.value.filter = currentFilter.value
-  ctx.value.drawImage(img, padLeft, padTop, img.width, img.height)
-  ctx.value.restore()
-
-  // 統一算好 Logo 尺寸（使用 base，讓 logo 跟圖片最大邊比例一致）
-  let logoWidth = logoImage.value ? base * logoScale : 0
-  let logoHeight =
-    logoImage.value && logoWidth ? (logoImage.value.height / logoImage.value.width) * logoWidth : 0
-
-  // Logo 高度最大不超過 infoHeight
-  const maxLogoHeight = infoHeight - infoPadding * 2.4
-  console.log('logo最高的高度為：', maxLogoHeight)
-  if (logoHeight > maxLogoHeight) {
-    const aspectRatio = logoImage.value ? logoImage.value.height / logoImage.value.width : 1
-    logoHeight = maxLogoHeight
-    logoWidth = maxLogoHeight / aspectRatio
-  }
-  console.log('目前logo高度為：', logoHeight)
-
-  // 畫 Logo (不受濾鏡影響)
-  if (logoImage.value) {
-    let x: number
-    let y: number
-    // logo x position
-    switch (logoPosition) {
-      case 'center':
-      case 'center-top':
-        x = padLeft + img.width / 2 - logoWidth / 2
-        break
-      case 'center-left':
-        x = padLeft + img.width / 2 - logoWidth - gap / 2
-        break
-      case 'right':
-        x = padLeft + img.width - logoWidth
-        break
-      case 'left':
-      default:
-        x = padLeft
-    }
-    // logo y position
-    switch (logoPosition) {
-      case 'center-top':
-        y = padTop + img.height + infoPadding
-        break
-      default:
-        y = padTop + img.height + infoPadding + infoLineHeight / 2
-    }
-
-    ctx.value.drawImage(logoImage.value, x, y, logoWidth, logoHeight)
-  }
-
-  // 畫 EXIF 資訊（不受濾鏡影響）
-  if (hasInfo) {
-    const info = currentPhotoInfo.value!
-
-    ctx.value.fillStyle = '#4b5563'
-    ctx.value.font = `${infoLineHeight}px monospace`
-    ctx.value.textBaseline = 'top'
-    ctx.value.textAlign = 'right'
-
-    // info x position
-    let x: number
-    switch (infoPosition) {
-      case 'left':
-        ctx.value.textAlign = 'left'
-        x = padLeft
-        break
-      case 'center-right':
-        ctx.value.textAlign = 'left'
-        x = padLeft + gap / 2 + img.width / 2
-        break
-      case 'center-bottom':
-        ctx.value.textAlign = 'center'
-        x = padLeft + img.width / 2
-        break
-      default:
-        ctx.value.textAlign = 'right'
-        x = padLeft + img.width
-    }
-    // info y position
-    let y: number
-    switch (infoPosition) {
-      case 'center-bottom':
-        y = padTop + img.height + infoPadding + logoHeight + infoPadding / 2
-        break
-      case 'center-right':
-        y = padTop + img.height + infoPadding
-        break
-      default:
-        y = padTop + img.height + infoPadding
-    }
-
-    y += infoLineHeight / 2
-    ctx.value.font = `${infoLineHeight * 1.25}px monospace`
-    ctx.value.fillText(`Shot on ${info.make}`, x, y)
-    y += gap
-    ctx.value.font = `${infoLineHeight * 0.95}px monospace`
-    ctx.value.fillStyle = '#C0C0C0'
-    ctx.value.fillText(`${info.aperture} | ${info.exposure}s | ISO ${info.iso}`, x, y)
-  }
-}
-
-// 讀取圖片資訊與壓縮圖片
-const processImage = async (source: File | string) => {
-  let file: File
-
-  if (typeof source === 'string') {
-    const response = await fetch(source)
-    const blob = await response.blob()
-    file = new File([blob], 'preload-img.jpg', { type: blob.type })
-  } else {
-    file = source
-  }
-
-  // ★★★ Step 1：先讀 EXIF（原始檔案才有資料）★★★
-  let photoInfoData: PhotoInfo | null = null
-  try {
-    const tags = await ExifReader.load(file)
-    console.log('上傳圖片資訊', tags)
-    photoInfoData = {
-      date: tags['DateTimeOriginal']?.description.split(' ')[0]?.replaceAll(':', '-') || '未知日期',
-      model: tags['Model']?.description || '未知相機',
-      exposure: tags['ExposureTime']?.description || '未知快門',
-      aperture: tags['FNumber']?.description || '未知光圈',
-      iso: tags['ISOSpeedRatings']?.description || '未知ISO',
-      make: tags['Make']?.description.split(' ')[0] || '未知廠牌',
-    }
-  } catch (error) {
-    console.error('Exif 讀取失敗', error)
-    photoInfoData = { error: '無法讀取此照片的 EXIF 資訊' }
-  }
-
-  // ★★★ Step 2：再壓縮（EXIF 已經讀完了，丟失也沒關係）★★★
-  let processedBlob: Blob
-  try {
-    processedBlob = await compressImage(file, 1920)
-  } catch (error) {
-    console.error('縮圖失敗，使用原始檔案', error)
-    processedBlob = file // 失敗就退回原檔
-  }
-
-  // ★★★ Step 3：用壓縮後的 blob 產生 URL★★★
-  const newPreviewUrl = URL.createObjectURL(processedBlob)
-
-  // Step 4：加入預覽清單
-  previewItems.value.push({
-    url: newPreviewUrl,
-    info: photoInfoData,
-  })
-
-  currentPreviewIndex.value = previewItems.value.length - 1
-  filterStore.setPreviewUrl(newPreviewUrl)
-
-  await nextTick() // 等 canvas 出現
-  await nextTick() // 等 ref 綁定完成
-
-  currentPhotoInfo.value = photoInfoData
-
-  // 載入圖片 → onload 會自動 renderCanvas()
-  loadImageToCanvas(newPreviewUrl)
-  // 呼叫圖片對應的 logo
-  loadLogoImg(photoInfoData.make ?? '')
-}
-
-// 選擇圖片預覽的功能
-const selectedPreview = (index: number) => {
-  currentPreviewIndex.value = index
-  const item = previewItems.value[index]
-  if (!item) return
-  loadImageToCanvas(item.url)
-  filterStore.setPreviewUrl(item.url)
-  loadLogoImg(item.info.make ?? '')
-
-  // 重要：切換時更新 photoInfo
-  currentPhotoInfo.value = item.info
-  renderCanvas()
-}
-
-// 刪除圖片功能
-const deleteImg = (index: number) => {
-  // 呼叫 URL.revokeObjectURL() 釋放它，避免不必要的記憶體占用。
-  const deletedItem = previewItems.value[index]
-  if (deletedItem?.url) {
-    URL.revokeObjectURL(deletedItem.url)
-  }
-
-  previewItems.value.splice(index, 1)
-
-  if (previewItems.value.length === 0) {
-    currentImage.value = null
-    currentPhotoInfo.value = null
-    filterStore.currentPreviewUrl = ''
-  } else {
-    const newIndex = Math.min(index, previewItems.value.length - 1)
-    currentPreviewIndex.value = newIndex
-    const item = previewItems.value[newIndex]
-
-    if (item) {
-      loadLogoImg(item.info.make ?? '')
-      loadImageToCanvas(item.url)
-      filterStore.setPreviewUrl(item.url)
-      currentPhotoInfo.value = item.info
-      renderCanvas()
-    }
-  }
 }
 
 // 匯出：直接存畫面上的 canvas，不用再另外組合
@@ -313,59 +81,16 @@ const downloadImage = () => {
   link.click()
 }
 
-// 載入照片對應的 logo function
-function loadLogoImg(brand: string) {
-  const logo = new Image()
-  logo.crossOrigin = 'anonymous'
-
-  // 新增是否匹配到廠牌
-  let matched = false
-  switch (brand) {
-    case 'SONY':
-      logo.src = brandSony
-      matched = true
-      break
-    case 'NIKON':
-      logo.src = brandNikon
-      matched = true
-      break
-    case 'Canon':
-      logo.src = brandCanon
-      matched = true
-      break
-    case 'FUJIFILM':
-      logo.src = brandFuji
-      matched = true
-      break
-    case 'Apple':
-      logo.src = brandApple
-      matched = true
-      break
-  }
-
-  if (!matched) {
-    logoImage.value = null
-    renderCanvas()
-    return
-  }
-
-  // logo.src = sony
-  logo.onload = () => {
-    logoImage.value = logo
-    renderCanvas()
-  }
-}
-
-// 預先載入logo 與 測試圖片
+// 預先載入測試圖片
 onMounted(() => {
-  processImage(pic)
+  addPhoto(pic)
 })
 
 watch(
   () => filterStore.currentFilter,
   (newFilter) => {
     currentFilter.value = newFilter
-    renderCanvas()
+    render()
   },
   { immediate: true },
 )
@@ -384,14 +109,14 @@ watch(
 watch(
   () => layoutStore.currentIndex,
   () => {
-    renderCanvas()
+    render()
   },
 )
 </script>
 
 <template>
   <div class="w-full h-full p-5 bg-gray-100">
-    <!-- 上傳區域保持不變 -->
+    <!-- 上傳區域 -->
     <input
       id="image-upload"
       @change="handleFileUpload"
@@ -400,9 +125,8 @@ watch(
       accept="image/*"
     />
 
-    <!-- 無圖片時的上傳區（不變） -->
+    <!-- 無圖片時的上傳區 -->
     <div v-show="previewItems.length === 0" class="bg-white rounded-lg shadow p-4 w-full h-full">
-      <!-- 自訂樣式的 label -->
       <label
         for="image-upload"
         class="w-full h-full border-2 border-dotted border-gray-500 rounded-lg flex items-center justify-center group cursor-pointer"
@@ -417,50 +141,17 @@ watch(
     <!-- 有圖片時的預覽 -->
     <div v-show="previewItems.length > 0" class="w-full h-full relative">
       <!-- 縮圖列 -->
-      <div
-        class="bg-white p-2 shadow-sm rounded-sm flex items-center justify-center gap-x-3 absolute -top-3 left-1/2 -translate-x-1/2"
-      >
-        <div
-          @click="selectedPreview(index)"
-          v-for="(item, index) in previewItems"
-          :key="item.url"
-          class="w-12 h-12 border-2 bg-white cursor-pointer group relative"
-          :class="{
-            'border-black': index === currentPreviewIndex,
-            'border-white': index !== currentPreviewIndex,
-          }"
-        >
-          <img :src="item.url" alt="" class="w-full h-full object-cover" />
-
-          <!-- 非選中的圖片遮罩 -->
-          <div
-            v-if="index !== currentPreviewIndex"
-            class="absolute inset-0 bg-gray-100 opacity-50"
-          ></div>
-
-          <!-- 圖片刪除 -->
-          <div
-            @click="deleteImg(index)"
-            class="absolute -top-2 right-0 w-5 h-5 flex items-center justify-center bg-white rounded-full opacity-0 group-hover:opacity-100"
-          >
-            <i class="ri-delete-bin-line text-gray-500 text-xs hover:text-red-600"></i>
-          </div>
-        </div>
-
-        <!-- 縮圖列右側上傳框 -->
-        <label
-          for="image-upload"
-          class="w-12 h-12 flex items-center justify-center cursor-pointer bg-white border-2 border-dotted border-gray-400"
-        >
-          <i class="ri-image-upload-fill text-gray-400"></i>
-        </label>
-      </div>
+      <ThumbnailStrip
+        :items="previewItems"
+        :current-index="currentPreviewIndex"
+        @select="selectPhoto"
+        @delete="deletePhoto"
+      />
 
       <!-- 大圖預覽 -->
       <div class="w-full h-full flex flex-col items-center justify-center">
         <div class="h-full max-h-full flex items-center justify-center">
-          <canvas ref="canvas" class="max-w-full max-h-full bg-white shadow-lg rounded-lg">
-          </canvas>
+          <canvas ref="canvas" class="max-w-full max-h-full bg-white shadow-lg rounded-lg"></canvas>
         </div>
       </div>
     </div>

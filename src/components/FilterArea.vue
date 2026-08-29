@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useFilterStore } from '@/stores/filterStore'
 import defaultBlur from '@/assets/default.jpg'
 
@@ -34,7 +34,7 @@ const filterDetails = ref<FilterOption[]>([
   // 進階效果
   { name: '清新', details: 'saturate(1.35) brightness(1.08)' },
   { name: '復古電影', details: 'sepia(0.4) contrast(1.15) saturate(0.9)' },
-  { name: '鮮明', details: 'contrast(1.4) saturate(1.3) sharpness(1)' }, // sharpness 在 canvas 支援有限
+  { name: '鮮明', details: 'contrast(1.4) saturate(1.3)' }
 ])
 
 const selectedFilter = (index: number) => {

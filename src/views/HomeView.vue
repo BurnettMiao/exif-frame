@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import PreviewArea from '@/components/PreviewArea.vue'
 import MenuAreas from '@/components/MenuAreas.vue'
 </script>

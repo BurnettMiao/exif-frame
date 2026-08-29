@@ -60,5 +60,15 @@ const handleSelected = (name: string) => {
     <div class="absolute top-0 left-16.25 h-full">
       <FilterArea v-if="currentSelected === '濾鏡區'" />
     </div>
+
+    <!-- 版面調整：功能開發中，先顯示 placeholder 避免白屏 -->
+    <div
+      v-if="currentSelected === '版面調整'"
+      class="absolute top-0 left-16.25 h-full min-w-45 2xl:max-w-60 bg-white px-4 py-6 border-r border-r-gray-200"
+    >
+      <div class="h-full flex items-center justify-center text-gray-400">
+        版面調整功能即將推出
+      </div>
+    </div>
   </div>
 </template>

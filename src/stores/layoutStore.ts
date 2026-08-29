@@ -41,7 +41,10 @@ export const useLayoutStore = defineStore('layout', () => {
   ])
 
   const currentIndex = ref(0)
-  const currentLayout = computed(() => layouts.value[currentIndex.value]) ?? layouts.value[0]
+  // layouts 為靜態非空陣列，[0] 必然存在
+const currentLayout = computed<FrameLayout>(
+  () => layouts.value[currentIndex.value] ?? layouts.value[0]!,
+)
 
   function selectedLayout(index: number) {
     currentIndex.value = index
