@@ -33,7 +33,7 @@ const handleSelected = (name: string) => {
 <template>
   <div class="flex items-start relative w-full max-w-76.25 h-full">
     <div
-      class="h-full py-4 px-2 flex flex-col gap-y-1 border-r border-gray-200 z-10 bg-white group w-16.25 hover:w-34.25 overflow-hidden transition-all ease-in-out duration-150"
+      class="h-full py-4 px-2 flex flex-col gap-y-1 border-r border-l border-gray-200 z-10 bg-white group w-16.25 hover:w-34.25 overflow-hidden transition-all ease-in-out duration-150"
     >
       <div
         @click="handleSelected(menu.name)"
@@ -66,9 +66,7 @@ const handleSelected = (name: string) => {
       v-if="currentSelected === '版面調整'"
       class="absolute top-0 left-16.25 h-full min-w-45 2xl:max-w-60 bg-white px-4 py-6 border-r border-r-gray-200"
     >
-      <div class="h-full flex items-center justify-center text-gray-400">
-        版面調整功能即將推出
-      </div>
+      <div class="h-full flex items-center justify-center text-gray-400">版面調整功能即將推出</div>
     </div>
   </div>
 </template>

@@ -13,14 +13,12 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div
-    class="bg-white p-2 shadow-sm rounded-sm flex items-center justify-center gap-x-3 absolute -top-3 left-1/2 -translate-x-1/2"
-  >
+  <div class="bg-white p-2 shadow-sm rounded-sm flex items-center justify-center gap-x-3 h-auto">
     <div
       @click="emit('select', index)"
       v-for="(item, index) in items"
       :key="item.url"
-      class="w-12 h-12 border-2 bg-white cursor-pointer group relative"
+      class="w-15 h-15 border-2 bg-white cursor-pointer group relative"
       :class="{
         'border-black': index === currentIndex,
         'border-white': index !== currentIndex,

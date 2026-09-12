@@ -139,7 +139,15 @@ watch(
     </div>
 
     <!-- 有圖片時的預覽 -->
-    <div v-show="previewItems.length > 0" class="w-full h-full relative">
+    <div
+      v-show="previewItems.length > 0"
+      class="w-full h-full flex flex-col items-center justify-center gap-y-5"
+    >
+      <!-- 大圖預覽 -->
+      <div class="w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+        <canvas ref="canvas" class="max-w-full max-h-full bg-white shadow-lg rounded-lg"></canvas>
+      </div>
+
       <!-- 縮圖列 -->
       <ThumbnailStrip
         :items="previewItems"
@@ -147,13 +155,6 @@ watch(
         @select="selectPhoto"
         @delete="deletePhoto"
       />
-
-      <!-- 大圖預覽 -->
-      <div class="w-full h-full flex flex-col items-center justify-center">
-        <div class="h-full max-h-full flex items-center justify-center">
-          <canvas ref="canvas" class="max-w-full max-h-full bg-white shadow-lg rounded-lg"></canvas>
-        </div>
-      </div>
     </div>
   </div>
 </template>
