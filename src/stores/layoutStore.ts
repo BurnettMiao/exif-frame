@@ -22,14 +22,14 @@ export const useLayoutStore = defineStore('layout', () => {
       logoPosition: 'right',
       logoScale: 0.18,
     },
-    {
-      name: 'logo中 info中',
-      padding: { top: 0.05, right: 0.05, bottom: 0.05, left: 0.05 },
-      gapRatio: 0.05,
-      infoPosition: 'center-right',
-      logoPosition: 'center-left',
-      logoScale: 0.18,
-    },
+    // {
+    //   name: 'logo中 info中',
+    //   padding: { top: 0.05, right: 0.05, bottom: 0.05, left: 0.05 },
+    //   gapRatio: 0.05,
+    //   infoPosition: 'center-right',
+    //   logoPosition: 'center-left',
+    //   logoScale: 0.18,
+    // },
     {
       name: 'logo上 info下',
       padding: { top: 0.05, right: 0.05, bottom: 0.05, left: 0.05 },
@@ -42,9 +42,9 @@ export const useLayoutStore = defineStore('layout', () => {
 
   const currentIndex = ref(0)
   // layouts 為靜態非空陣列，[0] 必然存在
-const currentLayout = computed<FrameLayout>(
-  () => layouts.value[currentIndex.value] ?? layouts.value[0]!,
-)
+  const currentLayout = computed<FrameLayout>(
+    () => layouts.value[currentIndex.value] ?? layouts.value[0]!,
+  )
 
   function selectedLayout(index: number) {
     currentIndex.value = index

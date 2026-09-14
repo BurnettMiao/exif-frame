@@ -145,7 +145,10 @@ watch(
     >
       <!-- 大圖預覽 -->
       <div class="w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden">
-        <canvas ref="canvas" class="max-w-full max-h-full bg-white shadow-lg rounded-lg"></canvas>
+        <canvas
+          ref="canvas"
+          class="block max-w-full max-h-full bg-white shadow-lg rounded-lg"
+        ></canvas>
       </div>
 
       <!-- 縮圖列 -->
