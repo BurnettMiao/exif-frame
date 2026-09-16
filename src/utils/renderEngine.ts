@@ -13,7 +13,14 @@ export interface RenderFrameParams {
 /**
  * 統一的繪製函式：畫面上看到的，就是最終匯出的樣子
  */
-export function renderFrame({ canvas, image, layout, info, logo, filter }: RenderFrameParams): void {
+export function renderFrame({
+  canvas,
+  image,
+  layout,
+  info,
+  logo,
+  filter,
+}: RenderFrameParams): void {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
@@ -40,9 +47,42 @@ export function renderFrame({ canvas, image, layout, info, logo, filter }: Rende
   // 4. 資訊區
   const infoHeight = hasInfo ? infoLineHeight * 3 + infoPadding * 2 : 0
 
+  // 統一算好 Logo 尺寸（使用 base，讓 logo 跟圖片最大邊比例一致）
+  let logoWidth = logo ? base * logoScale : 0
+  let logoHeight = logo && logoWidth ? (logo.height / logo.width) * logoWidth : 0
+
+  // Logo 高度最大不超過 infoHeight
+  const maxLogoHeight = hasInfo ? Math.max(0, infoHeight - infoPadding * 2.4) : logoHeight
+  if (logoHeight > maxLogoHeight) {
+    const aspectRatio = logo ? logo.height / logo.width : 1
+    logoHeight = maxLogoHeight
+    logoWidth = maxLogoHeight / aspectRatio
+  }
+
+  // logo 區塊的完整佔高（含上下內距）
+  const logoBlockHeight = infoPadding + logoHeight
+
+  // 底欄內容的預設高度：以資訊列本身的高度為基準
+  const defaultBottomContentHeight = infoHeight
+
+  // 資訊列定位在「下置中」時，底欄需容納 logo 區塊 + 分隔線與資訊列的堆疊高度
+  // 0.95：字體視覺高度約為 line-height 的 95%，避免底部多出一條縫
+  const centerBottomContentHeight =
+    infoPosition === 'center-bottom'
+      ? logoBlockHeight + infoPadding / 2 + infoLineHeight / 2 + gap + infoLineHeight * 0.95
+      : 0
+
+  // logo 定位在「上置中」時，底欄需容納整個 logo 區塊
+  const logoTopContentHeight = logoPosition === 'center-top' ? logoBlockHeight : 0
+
+  // 取三種定位情境的最大值並向上取整，確保任何組合下內容都不被裁切
+  const bottomContentHeight = Math.ceil(
+    Math.max(defaultBottomContentHeight, centerBottomContentHeight, logoTopContentHeight),
+  )
+
   // ***** 此處為全部 canvas 最後的高度與寬度 *****
   canvas.width = image.width + padLeft + padRight
-  canvas.height = image.height + padTop + padBottom + infoHeight
+  canvas.height = image.height + padTop + padBottom + bottomContentHeight
 
   // 底色（避免 jpg 匯出時資訊區變黑）
   ctx.fillStyle = '#ffffff'
@@ -53,18 +93,6 @@ export function renderFrame({ canvas, image, layout, info, logo, filter }: Rende
   ctx.filter = filter
   ctx.drawImage(image, padLeft, padTop, image.width, image.height)
   ctx.restore()
-
-  // 統一算好 Logo 尺寸（使用 base，讓 logo 跟圖片最大邊比例一致）
-  let logoWidth = logo ? base * logoScale : 0
-  let logoHeight = logo && logoWidth ? (logo.height / logo.width) * logoWidth : 0
-
-  // Logo 高度最大不超過 infoHeight
-  const maxLogoHeight = infoHeight - infoPadding * 2.4
-  if (logoHeight > maxLogoHeight) {
-    const aspectRatio = logo ? logo.height / logo.width : 1
-    logoHeight = maxLogoHeight
-    logoWidth = maxLogoHeight / aspectRatio
-  }
 
   // 畫 Logo (不受濾鏡影響)
   if (logo) {

@@ -5,7 +5,6 @@ import type { FrameLayout } from '@/types/layout'
 // layout 管理狀態
 export const useLayoutStore = defineStore('layout', () => {
   const layouts = ref<FrameLayout[]>([
-    // Instax Mini 比例參考：左右 ~19%，上方 ~8%，下方 ~20%（含資訊區）
     {
       name: 'logo左 info右',
       padding: { top: 0.05, right: 0.05, bottom: 0.05, left: 0.05 },

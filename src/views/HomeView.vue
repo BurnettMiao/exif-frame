@@ -4,7 +4,7 @@ import MenuAreas from '@/components/MenuAreas.vue'
 </script>
 
 <template>
-  <div class="flex w-full h-full max-w-384 mx-auto overflow-hidden">
+  <div class="flex w-full h-full mx-auto overflow-hidden">
     <!-- 左側區域 -->
     <MenuAreas />
 

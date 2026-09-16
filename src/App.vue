@@ -29,7 +29,7 @@ const handleExport = () => {
     </header>
 
     <!-- 主體 -->
-    <div class="flex-1 flex overflow-hidden bg-white">
+    <div class="flex-1 flex overflow-hidden bg-gray-100">
       <RouterView />
     </div>
 
