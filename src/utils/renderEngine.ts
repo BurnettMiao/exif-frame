@@ -120,7 +120,14 @@ export function renderFrame({
         y = padTop + image.height + infoPadding
         break
       default:
-        y = padTop + image.height + infoPadding + infoLineHeight / 2
+        y =
+          padTop +
+          image.height +
+          infoPadding +
+          infoLineHeight / 2 +
+          gap +
+          infoLineHeight * 0.95 -
+          logoHeight
     }
 
     ctx.drawImage(logo, x, y, logoWidth, logoHeight)

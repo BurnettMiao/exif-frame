@@ -5,12 +5,15 @@ import { useFilterStore } from '@/stores/filterStore'
 import { compressImage } from '@/utils/imageUtils'
 
 export interface PreviewItem {
+  id: string
   url: string
   info: PhotoInfo
 }
 
+let nextPreviewItemId = 0
+
 /**
- * 管理照片清單：上傳 → 讀 EXIF → 壓縮 → 切換 / 刪除
+ * 管理照片清單：上傳 → 立即預覽 → 背景讀 EXIF / 壓縮 → 切換 / 刪除
  */
 export function usePhotoCollection() {
   const filterStore = useFilterStore()
@@ -21,7 +24,45 @@ export function usePhotoCollection() {
     () => previewItems.value[currentPreviewIndex.value] ?? null,
   )
 
-  // 讀取 EXIF、壓縮圖片並加入預覽清單
+  function updatePreviewItem(
+    target: PreviewItem,
+    patch: Partial<Pick<PreviewItem, 'url' | 'info'>>,
+  ) {
+    const index = previewItems.value.findIndex((item) => item.id === target.id)
+    if (index === -1) return null
+
+    const currentItem = previewItems.value[index]
+    if (!currentItem) return null
+
+    const updatedItem: PreviewItem = { ...currentItem, ...patch }
+    previewItems.value.splice(index, 1, updatedItem)
+
+    if (index === currentPreviewIndex.value) {
+      filterStore.setPreviewUrl(updatedItem.url)
+    }
+
+    return updatedItem
+  }
+
+  async function readPhotoInfo(file: File): Promise<PhotoInfo> {
+    try {
+      const tags = await ExifReader.load(file)
+      return {
+        date:
+          tags['DateTimeOriginal']?.description.split(' ')[0]?.replaceAll(':', '-') || '未知日期',
+        model: tags['Model']?.description || '未知相機',
+        exposure: tags['ExposureTime']?.description || '未知快門',
+        aperture: tags['FNumber']?.description || '未知光圈',
+        iso: tags['ISOSpeedRatings']?.description || '未知ISO',
+        make: tags['Make']?.description.split(' ')[0] || '未知廠牌',
+      }
+    } catch (error) {
+      console.error('Exif 讀取失敗', error)
+      return { error: '無法讀取此照片的 EXIF 資訊' }
+    }
+  }
+
+  // 先加入原圖預覽，再於背景讀取 EXIF、壓縮圖片
   async function addPhoto(source: File | string): Promise<PreviewItem> {
     let file: File
 
@@ -33,37 +74,34 @@ export function usePhotoCollection() {
       file = source
     }
 
-    // Step 1：先讀 EXIF（原始檔案才有資料）
-    let photoInfoData: PhotoInfo
-    try {
-      const tags = await ExifReader.load(file)
-      photoInfoData = {
-        date: tags['DateTimeOriginal']?.description.split(' ')[0]?.replaceAll(':', '-') || '未知日期',
-        model: tags['Model']?.description || '未知相機',
-        exposure: tags['ExposureTime']?.description || '未知快門',
-        aperture: tags['FNumber']?.description || '未知光圈',
-        iso: tags['ISOSpeedRatings']?.description || '未知ISO',
-        make: tags['Make']?.description.split(' ')[0] || '未知廠牌',
-      }
-    } catch (error) {
-      console.error('Exif 讀取失敗', error)
-      photoInfoData = { error: '無法讀取此照片的 EXIF 資訊' }
+    const originalUrl = URL.createObjectURL(file)
+    const item: PreviewItem = {
+      id: String(nextPreviewItemId++),
+      url: originalUrl,
+      info: { error: 'EXIF 讀取中' },
     }
-
-    // Step 2：再壓縮（EXIF 已經讀完了，丟失也沒關係）
-    let processedBlob: Blob
-    try {
-      processedBlob = await compressImage(file, 1920)
-    } catch (error) {
-      console.error('縮圖失敗，使用原始檔案', error)
-      processedBlob = file // 失敗就退回原檔
-    }
-
-    // Step 3：加入預覽清單並設為目前照片
-    const item: PreviewItem = { url: URL.createObjectURL(processedBlob), info: photoInfoData }
     previewItems.value.push(item)
     currentPreviewIndex.value = previewItems.value.length - 1
     filterStore.setPreviewUrl(item.url)
+
+    readPhotoInfo(file).then((photoInfoData) => {
+      updatePreviewItem(item, { info: photoInfoData })
+    })
+
+    compressImage(file, 1920)
+      .then((processedBlob) => {
+        const compressedUrl = URL.createObjectURL(processedBlob)
+        const updatedItem = updatePreviewItem(item, { url: compressedUrl })
+
+        if (updatedItem) {
+          URL.revokeObjectURL(originalUrl)
+        } else {
+          URL.revokeObjectURL(compressedUrl)
+        }
+      })
+      .catch((error) => {
+        console.error('縮圖失敗，使用原始檔案', error)
+      })
 
     return item
   }

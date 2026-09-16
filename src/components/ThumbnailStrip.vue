@@ -17,7 +17,7 @@ const emit = defineEmits<{
     <div
       @click="emit('select', index)"
       v-for="(item, index) in items"
-      :key="item.url"
+      :key="item.id"
       class="w-12 h-12 2xl:h-15 2xl:w-15 border-2 bg-white cursor-pointer group relative"
       :class="{
         'border-black': index === currentIndex,
