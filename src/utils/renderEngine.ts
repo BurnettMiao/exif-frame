@@ -125,9 +125,8 @@ export function renderFrame({
           image.height +
           infoPadding +
           infoLineHeight / 2 +
-          gap +
-          infoLineHeight * 0.95 -
-          logoHeight
+          (gap + infoLineHeight * 0.95) / 2 -
+          logoHeight / 2
     }
 
     ctx.drawImage(logo, x, y, logoWidth, logoHeight)
