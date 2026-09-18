@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, onBeforeUnmount, onMounted, watch } from 'vue'
+import { computed, nextTick, reactive, ref, onBeforeUnmount, onMounted, watch } from 'vue'
 import { useFilterStore } from '@/stores/filterStore'
 import { useLayoutStore } from '@/stores/layoutStore'
 import { usePhotoCollection, type PreviewItem } from '@/composables/usePhotoCollection'
@@ -25,15 +25,14 @@ const previewViewportSize = ref({ width: 0, height: 0 })
 const isPreviewAnimating = ref(false)
 const isPreviewPreparing = ref(false)
 const isUploadingPhoto = ref(false)
-const previewRenderVersion = ref(0)
 let previewAnimationTimer: number | null = null
 let uploadToken = 0
 const imageCache = new Map<string, Promise<HTMLImageElement>>()
 const logoCache = new Map<string, Promise<HTMLImageElement | null>>()
 const renderedPreviewCache = new Map<string, Promise<RenderedPreview>>()
 const renderedPreviewUrlCache = new Map<string, Promise<string>>()
-const renderedPreviewUrls = new Map<string, string>()
-const renderedPreviewSizes = new Map<string, { width: number; height: number }>()
+const renderedPreviewUrls = reactive(new Map<string, string>())
+const renderedPreviewSizes = reactive(new Map<string, { width: number; height: number }>())
 
 interface RenderedPreview {
   canvas: HTMLCanvasElement
@@ -42,7 +41,10 @@ interface RenderedPreview {
 }
 
 const setCanvasRef = (element: unknown) => {
-  canvas.value = element instanceof HTMLCanvasElement ? element : null
+  const nextCanvas = element instanceof HTMLCanvasElement ? element : null
+  if (canvas.value === nextCanvas) return
+
+  canvas.value = nextCanvas
   updatePreviewFrameSize()
 }
 
@@ -73,8 +75,6 @@ const calculatePreviewFrameSize = (sourceWidth: number, sourceHeight: number) =>
 }
 
 const getPreviewFrameStyle = (item: PreviewItem) => {
-  previewRenderVersion.value
-
   const renderedSize = renderedPreviewSizes.get(getPreviewRenderKey(item))
   const frameSize = renderedSize
     ? calculatePreviewFrameSize(renderedSize.width, renderedSize.height)
@@ -174,7 +174,6 @@ const renderPreviewItem = (item: PreviewItem): Promise<RenderedPreview> => {
       width: offscreenCanvas.width,
       height: offscreenCanvas.height,
     })
-    previewRenderVersion.value += 1
 
     return { canvas: offscreenCanvas, image, logo }
   })
@@ -184,7 +183,6 @@ const renderPreviewItem = (item: PreviewItem): Promise<RenderedPreview> => {
 }
 
 const getRenderedPreviewUrl = (item: PreviewItem) => {
-  previewRenderVersion.value
   return renderedPreviewUrls.get(getPreviewRenderKey(item)) ?? item.url
 }
 
@@ -200,7 +198,6 @@ const prepareRenderedPreviewUrl = (item: PreviewItem): Promise<string> => {
     .then((renderedPreview) => {
       const url = renderedPreview.canvas.toDataURL('image/jpeg', 0.92)
       renderedPreviewUrls.set(cacheKey, url)
-      previewRenderVersion.value += 1
       return url
     })
     .catch((error) => {
@@ -217,7 +214,6 @@ const clearRenderedPreviewCaches = () => {
   renderedPreviewUrlCache.clear()
   renderedPreviewUrls.clear()
   renderedPreviewSizes.clear()
-  previewRenderVersion.value += 1
 }
 
 const copyRenderedPreviewToCanvas = (renderedPreview: RenderedPreview) => {
@@ -316,12 +312,23 @@ const updatePreviewFrameSize = () => {
 
   const availableWidth = Math.max(0, previewStack.value.clientWidth - 52)
   const availableHeight = Math.max(0, previewStack.value.clientHeight - 52)
-  previewViewportSize.value = { width: availableWidth, height: availableHeight }
+  if (
+    previewViewportSize.value.width !== availableWidth ||
+    previewViewportSize.value.height !== availableHeight
+  ) {
+    previewViewportSize.value = { width: availableWidth, height: availableHeight }
+  }
 
   if (!canvas.value || !canvas.value.width || !canvas.value.height) return
 
   const frameSize = calculatePreviewFrameSize(canvas.value.width, canvas.value.height)
-  if (frameSize) previewFrameSize.value = frameSize
+  if (
+    frameSize &&
+    (previewFrameSize.value.width !== frameSize.width ||
+      previewFrameSize.value.height !== frameSize.height)
+  ) {
+    previewFrameSize.value = frameSize
+  }
 }
 
 // 統一的繪製入口：畫面上看到的，就是最終匯出的樣子
