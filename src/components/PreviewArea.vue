@@ -105,6 +105,23 @@ const stackedPreviewItems = computed(() => {
   })
 })
 
+const previewStackStyle = computed(() => {
+  const baseSize = Math.min(previewViewportSize.value.width, previewViewportSize.value.height)
+  const stackOffset = baseSize ? Math.min(Math.max(baseSize * 0.028, 18), 48) : 18
+  const stackRotation = 1.5
+
+  return {
+    '--stack-size': stackedPreviewItems.value.length,
+    '--stack-offset': `${stackOffset}px`,
+    '--stack-rotation': `${stackRotation}deg`,
+  }
+})
+
+const getPreviewCardKey = (item: PreviewItem, stackIndex: number) => {
+  if (previewItems.value.length >= 3) return item.id
+  return `${item.id}-${stackIndex}`
+}
+
 const selectPreviewCard = (itemIndex: number, stackIndex: number) => {
   if (
     isPreviewAnimating.value ||
@@ -503,11 +520,11 @@ watch(
           ref="previewStack"
           class="preview-stack"
           :class="{ 'is-animating': isPreviewAnimating }"
-          :style="{ '--stack-size': stackedPreviewItems.length }"
+          :style="previewStackStyle"
         >
           <button
             v-for="{ item, itemIndex, stackIndex } in stackedPreviewItems"
-            :key="`${item.id}-${stackIndex}`"
+            :key="getPreviewCardKey(item, stackIndex)"
             type="button"
             class="preview-card"
             :class="{ 'is-active': stackIndex === 0 }"
@@ -517,10 +534,10 @@ watch(
             <canvas
               v-if="stackIndex === 0"
               :ref="setCanvasRef"
-              class="preview-stack-canvas"
+              class="preview-stack-canvas shadow-xl"
               :style="previewFrameStyle"
             ></canvas>
-            <div v-else class="preview-stack-frame" :style="getPreviewFrameStyle(item)">
+            <div v-else class="preview-stack-frame shadow-xl" :style="getPreviewFrameStyle(item)">
               <img :src="getRenderedPreviewUrl(item)" alt="" class="preview-stack-image" />
             </div>
           </button>
@@ -563,6 +580,8 @@ watch(
 <style scoped>
 .preview-stack {
   --stack-size: 1;
+  --stack-offset: 18px;
+  --stack-rotation: 1.5deg;
 
   position: relative;
   width: 100%;
@@ -665,8 +684,12 @@ watch(
   border: 0;
   background: transparent;
   cursor: pointer;
-  transform: translate(calc(var(--stack-index) * 18px), calc(var(--stack-index) * 18px))
-    scale(calc(1 - var(--stack-index) * 0.045)) rotate(calc(var(--stack-index) * 1.5deg));
+  transform: translate(
+      calc(var(--stack-index) * var(--stack-offset)),
+      calc(var(--stack-index) * var(--stack-offset))
+    )
+    scale(calc(1 - var(--stack-index) * 0.045))
+    rotate(calc(var(--stack-index) * var(--stack-rotation)));
   transform-origin: center;
   transition:
     transform 220ms ease,
@@ -687,12 +710,16 @@ watch(
 
 .preview-stack.is-animating .preview-card:not(.is-active) {
   opacity: 1;
-  transform: translate(calc(var(--promote-index) * 18px), calc(var(--promote-index) * 18px))
-    scale(calc(1 - var(--promote-index) * 0.045)) rotate(calc(var(--promote-index) * 1.5deg));
+  transform: translate(
+      calc(var(--promote-index) * var(--stack-offset)),
+      calc(var(--promote-index) * var(--stack-offset))
+    )
+    scale(calc(1 - var(--promote-index) * 0.045))
+    rotate(calc(var(--promote-index) * var(--stack-rotation)));
 }
 
 .preview-card:not(.is-active) {
-  opacity: 0.92;
+  opacity: 1;
 }
 
 .preview-card.is-active {
@@ -706,7 +733,7 @@ watch(
   max-height: 100%;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 22px 45px rgb(15 23 42 / 18%);
+  /* box-shadow: 0 22px 45px rgb(15 23 42 / 18%); */
 }
 
 .preview-stack-frame {
