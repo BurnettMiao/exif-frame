@@ -498,7 +498,7 @@ watch(
       class="w-full h-full flex flex-col items-center justify-center gap-y-5"
     >
       <!-- 大圖預覽 -->
-      <div class="relative w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+      <div class="relative w-full flex-1 min-h-0 flex items-center justify-center">
         <div
           ref="previewStack"
           class="preview-stack"
@@ -688,8 +688,7 @@ watch(
 .preview-stack.is-animating .preview-card:not(.is-active) {
   opacity: 1;
   transform: translate(calc(var(--promote-index) * 18px), calc(var(--promote-index) * 18px))
-    scale(calc(1 - var(--promote-index) * 0.045))
-    rotate(calc(var(--promote-index) * 1.5deg));
+    scale(calc(1 - var(--promote-index) * 0.045)) rotate(calc(var(--promote-index) * 1.5deg));
 }
 
 .preview-card:not(.is-active) {
