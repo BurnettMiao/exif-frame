@@ -8,6 +8,11 @@ export interface PreviewItem {
   id: string
   url: string
   info: PhotoInfo
+  ready?: Promise<PreviewItem>
+}
+
+interface AddPhotoOptions {
+  select?: boolean
 }
 
 let nextPreviewItemId = 0
@@ -63,7 +68,11 @@ export function usePhotoCollection() {
   }
 
   // 先加入原圖預覽，再於背景讀取 EXIF、壓縮圖片
-  async function addPhoto(source: File | string): Promise<PreviewItem> {
+  async function addPhoto(
+    source: File | string,
+    options: AddPhotoOptions = {},
+  ): Promise<PreviewItem> {
+    const shouldSelect = options.select ?? true
     let file: File
 
     if (typeof source === 'string') {
@@ -81,14 +90,17 @@ export function usePhotoCollection() {
       info: { error: 'EXIF 讀取中' },
     }
     previewItems.value.push(item)
-    currentPreviewIndex.value = previewItems.value.length - 1
-    filterStore.setPreviewUrl(item.url)
 
-    readPhotoInfo(file).then((photoInfoData) => {
-      updatePreviewItem(item, { info: photoInfoData })
+    if (shouldSelect) {
+      currentPreviewIndex.value = previewItems.value.length - 1
+      filterStore.setPreviewUrl(item.url)
+    }
+
+    const infoPromise = readPhotoInfo(file).then((photoInfoData) => {
+      return updatePreviewItem(item, { info: photoInfoData }) ?? item
     })
 
-    compressImage(file, 1920)
+    const compressionPromise = compressImage(file, 1920)
       .then((processedBlob) => {
         const compressedUrl = URL.createObjectURL(processedBlob)
         const updatedItem = updatePreviewItem(item, { url: compressedUrl })
@@ -98,10 +110,17 @@ export function usePhotoCollection() {
         } else {
           URL.revokeObjectURL(compressedUrl)
         }
+
+        return updatedItem ?? item
       })
       .catch((error) => {
         console.error('縮圖失敗，使用原始檔案', error)
+        return item
       })
+
+    item.ready = Promise.all([infoPromise, compressionPromise]).then(() => {
+      return previewItems.value.find((previewItem) => previewItem.id === item.id) ?? item
+    })
 
     return item
   }
