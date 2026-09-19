@@ -485,7 +485,7 @@ watch(
 </script>
 
 <template>
-  <div class="w-full h-full p-5 bg-gray-100">
+  <div class="preview-area">
     <!-- 上傳區域 -->
     <input
       id="image-upload"
@@ -578,6 +578,13 @@ watch(
 </template>
 
 <style scoped>
+.preview-area {
+  width: 100%;
+  height: 100%;
+  background: #f3f4f6;
+  padding: 20px;
+}
+
 .preview-stack {
   --stack-size: 1;
   --stack-offset: 18px;
@@ -751,5 +758,29 @@ watch(
   min-width: 0;
   min-height: 0;
   object-fit: contain;
+}
+
+@media (max-width: 767px) {
+  .preview-area {
+    padding: 12px;
+  }
+
+  .preview-stack {
+    padding: 6px 32px 32px 6px;
+  }
+
+  .next-preview-button {
+    right: 14px;
+    bottom: 10px;
+    min-width: 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 999px;
+  }
+
+  .next-preview-button span {
+    display: none;
+  }
 }
 </style>

@@ -11,16 +11,20 @@ const selectedLayout = (index: number) => {
 
 <template>
   <div
-    class="min-w-45 w-full 2xl:max-w-60 bg-white px-4 py-6 border-r border-r-gray-200 flex flex-col h-full overflow-hidden"
+    class="flex h-full min-w-45 w-full flex-col overflow-hidden border-r border-r-gray-200 bg-white px-4 py-6 2xl:max-w-60 max-md:h-auto max-md:max-h-[190px] max-md:min-w-0 max-md:max-w-none max-md:border-r-0 max-md:px-3.5 max-md:py-3"
   >
-    <div class="flex-1 overflow-y-scroll flex flex-col gap-y-4">
+    <div
+      class="flex flex-1 flex-col gap-y-4 overflow-y-scroll max-md:flex-row max-md:gap-3 max-md:overflow-x-auto max-md:overflow-y-hidden max-md:pb-1.5"
+    >
       <div
         @click="selectedLayout(index)"
         v-for="(layout, index) in layoutStore.layouts"
         :key="layout.name"
-        class="cursor-pointer group"
+        class="group cursor-pointer max-md:w-28 max-md:flex-[0_0_7rem]"
       >
-        <div class="border border-gray-100 rounded-lg overflow-hidden w-full aspect-4/3 shadow-sm">
+        <div
+          class="aspect-4/3 w-full overflow-hidden rounded-lg border border-gray-100 shadow-sm max-md:h-[84px]"
+        >
           <img
             :src="defaultPic"
             class="w-full max-w-52.5 h-full object-center object-cover"
