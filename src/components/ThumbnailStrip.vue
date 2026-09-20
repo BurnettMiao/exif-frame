@@ -14,7 +14,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="w-full lg:w-auto max-w-full overflow-x-auto overscroll-x-contain">
+  <div class="w-auto max-w-full overflow-x-auto overscroll-x-contain">
     <div
       class="bg-white p-2 shadow-sm rounded-sm flex w-max min-w-full items-center justify-start gap-x-3 h-auto"
     >

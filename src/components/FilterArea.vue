@@ -34,7 +34,7 @@ const filterDetails = ref<FilterOption[]>([
   // 進階效果
   { name: '清新', details: 'saturate(1.35) brightness(1.08)' },
   { name: '復古電影', details: 'sepia(0.4) contrast(1.15) saturate(0.9)' },
-  { name: '鮮明', details: 'contrast(1.4) saturate(1.3)' }
+  { name: '鮮明', details: 'contrast(1.4) saturate(1.3)' },
 ])
 
 const selectedFilter = (index: number) => {
@@ -48,19 +48,19 @@ const selectedFilter = (index: number) => {
 
 <template>
   <div
-    class="flex h-full w-full min-w-45 flex-col overflow-hidden border-r border-r-gray-200 bg-white px-4 py-6 2xl:max-w-60 max-md:h-auto max-md:max-h-[190px] max-md:min-w-0 max-md:max-w-none max-md:border-r-0 max-md:px-3.5 max-md:py-3"
+    class="flex h-full w-full min-w-45 flex-col overflow-hidden border-r border-r-gray-200 bg-white px-4 py-6 2xl:max-w-60 max-lg:h-auto max-lg:max-h-[190px] max-lg:min-w-0 max-lg:max-w-none max-lg:border-r-0 max-lg:px-3.5 max-lg:py-3"
   >
     <div
-      class="flex flex-1 flex-col gap-y-4 overflow-y-scroll max-md:flex-row max-md:gap-3 max-md:overflow-x-auto max-md:overflow-y-hidden max-md:pb-1.5"
+      class="flex flex-1 flex-col gap-y-4 overflow-y-scroll max-lg:flex-row max-lg:gap-3 max-lg:overflow-x-auto max-lg:overflow-y-hidden max-lg:pb-1.5"
     >
       <div
         @click="selectedFilter(index)"
         v-for="(filter, index) in filterDetails"
         :key="filter.name"
-        class="group cursor-pointer max-md:w-28 max-md:flex-[0_0_7rem]"
+        class="group cursor-pointer max-lg:w-28 max-lg:flex-[0_0_7rem]"
       >
         <div
-          class="aspect-4/3 w-full overflow-hidden rounded-lg border border-gray-100 shadow-sm max-md:h-[84px]"
+          class="aspect-4/3 w-full overflow-hidden rounded-lg border border-gray-100 shadow-sm max-lg:h-[84px]"
         >
           <img
             :src="filterStore.currentPreviewUrl || defaultBlur"

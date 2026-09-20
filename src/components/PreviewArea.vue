@@ -777,7 +777,7 @@ watch(
   object-fit: contain;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .preview-area {
     padding: 12px;
   }

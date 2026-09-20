@@ -4,45 +4,11 @@ import MenuAreas from '@/components/MenuAreas.vue'
 </script>
 
 <template>
-  <div class="home-layout">
+  <div class="flex h-full w-full flex-col overflow-hidden lg:flex-row">
     <!-- 左側區域 -->
-    <MenuAreas class="home-menu" />
+    <MenuAreas class="order-2 shrink-0 lg:order-none" />
 
     <!-- 右側側區域 -->
-    <PreviewArea class="home-preview" />
+    <PreviewArea class="order-1 min-h-0 min-w-0 flex-1 lg:order-none" />
   </div>
 </template>
-
-<style scoped>
-.home-layout {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  margin: 0 auto;
-  overflow: hidden;
-}
-
-.home-menu {
-  flex: 0 0 auto;
-}
-
-.home-preview {
-  flex: 1 1 auto;
-  min-width: 0;
-  min-height: 0;
-}
-
-@media (max-width: 767px) {
-  .home-layout {
-    flex-direction: column;
-  }
-
-  .home-preview {
-    order: 1;
-  }
-
-  .home-menu {
-    order: 2;
-  }
-}
-</style>
