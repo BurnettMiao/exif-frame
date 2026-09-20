@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { nextTick, ref, watch } from 'vue'
 import type { PreviewItem } from '@/composables/usePhotoCollection'
 
-defineProps<{
+const props = defineProps<{
   items: PreviewItem[]
   currentIndex: number
   maxCount: number
@@ -11,6 +12,26 @@ const emit = defineEmits<{
   select: [index: number]
   delete: [index: number]
 }>()
+
+const thumbnailElements = ref<HTMLElement[]>([])
+
+const setThumbnailRef = (element: unknown, index: number) => {
+  if (element instanceof HTMLElement) {
+    thumbnailElements.value[index] = element
+  }
+}
+
+watch(
+  () => props.currentIndex,
+  async (currentIndex) => {
+    await nextTick()
+    thumbnailElements.value[currentIndex]?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'nearest',
+    })
+  },
+)
 </script>
 
 <template>
@@ -22,6 +43,7 @@ const emit = defineEmits<{
         @click="emit('select', index)"
         v-for="(item, index) in items"
         :key="item.id"
+        :ref="(element) => setThumbnailRef(element, index)"
         class="w-12 h-12 2xl:h-15 2xl:w-15 shrink-0 border-2 bg-white cursor-pointer group relative"
         :class="{
           'border-black': index === currentIndex,
