@@ -44,6 +44,8 @@ export function renderFrame({
 
   // 3. 是否有資訊區
   const hasInfo = !!info && !info.error
+  const infoTitleText = hasInfo ? `Shot on ${info.model}` : ''
+  const infoDetailText = hasInfo ? `${info.aperture} | ${info.exposure}s | ISO ${info.iso}` : ''
   // 4. 資訊區
   const infoHeight = hasInfo ? infoLineHeight * 3 + infoPadding * 2 : 0
 
@@ -94,6 +96,26 @@ export function renderFrame({
   ctx.drawImage(image, padLeft, padTop, image.width, image.height)
   ctx.restore()
 
+  let centeredGroupLogoX: number | null = null
+  let centeredGroupInfoX: number | null = null
+
+  if (infoPosition === 'center-right' && logoPosition === 'center-left') {
+    ctx.save()
+    ctx.font = `${infoLineHeight * 1.25}px monospace`
+    const titleWidth = hasInfo ? ctx.measureText(infoTitleText).width : 0
+    ctx.font = `${infoLineHeight * 0.95}px monospace`
+    const detailWidth = hasInfo ? ctx.measureText(infoDetailText).width : 0
+    ctx.restore()
+
+    const infoWidth = Math.max(titleWidth, detailWidth)
+    const visibleGap = logo ? gap : 0
+    const groupWidth = logoWidth + visibleGap + infoWidth
+    const groupStartX = padLeft + image.width / 2 - groupWidth / 2
+
+    centeredGroupLogoX = groupStartX
+    centeredGroupInfoX = groupStartX + logoWidth + visibleGap
+  }
+
   // 畫 Logo (不受濾鏡影響)
   if (logo) {
     let x: number
@@ -104,7 +126,7 @@ export function renderFrame({
         x = padLeft + image.width / 2 - logoWidth / 2
         break
       case 'center-left':
-        x = padLeft + image.width / 2 - logoWidth - gap / 2
+        x = centeredGroupLogoX ?? padLeft + image.width / 2 - logoWidth - gap / 2
         break
       case 'right':
         x = padLeft + image.width - logoWidth
@@ -148,7 +170,7 @@ export function renderFrame({
         break
       case 'center-right':
         ctx.textAlign = 'left'
-        x = padLeft + gap / 2 + image.width / 2
+        x = centeredGroupInfoX ?? padLeft + gap / 2 + image.width / 2
         break
       case 'center-bottom':
         ctx.textAlign = 'center'
@@ -173,10 +195,10 @@ export function renderFrame({
 
     y += infoLineHeight / 2
     ctx.font = `${infoLineHeight * 1.25}px monospace`
-    ctx.fillText(`Shot on ${info.make}`, x, y)
+    ctx.fillText(infoTitleText, x, y)
     y += gap
     ctx.font = `${infoLineHeight * 0.95}px monospace`
     ctx.fillStyle = '#C0C0C0'
-    ctx.fillText(`${info.aperture} | ${info.exposure}s | ISO ${info.iso}`, x, y)
+    ctx.fillText(infoDetailText, x, y)
   }
 }

@@ -32,9 +32,9 @@ const emit = defineEmits<{
       <!-- 圖片刪除 -->
       <div
         @click.stop="emit('delete', index)"
-        class="absolute -top-2 right-0 w-5 h-5 flex items-center justify-center bg-white rounded-full opacity-0 group-hover:opacity-100"
+        class="absolute -top-2 right-0 w-6 h-6 flex items-center justify-center bg-white rounded-full opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
       >
-        <i class="ri-delete-bin-line text-gray-500 text-xs hover:text-red-600"></i>
+        <i class="ri-delete-bin-line text-gray-500 text-base hover:text-red-600"></i>
       </div>
     </div>
 
@@ -43,7 +43,7 @@ const emit = defineEmits<{
       for="image-upload"
       class="w-12 h-12 flex items-center justify-center cursor-pointer bg-white border-2 border-dotted border-gray-400"
     >
-      <i class="ri-image-upload-fill text-gray-400"></i>
+      <i class="ri-image-upload-fill text-2xl text-gray-400"></i>
     </label>
   </div>
 </template>

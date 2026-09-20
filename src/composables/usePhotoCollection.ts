@@ -16,6 +16,9 @@ interface AddPhotoOptions {
 }
 
 let nextPreviewItemId = 0
+const computedInfo = computed(() => {
+  return
+})
 
 /**
  * 管理照片清單：上傳 → 立即預覽 → 背景讀 EXIF / 壓縮 → 切換 / 刪除
@@ -52,14 +55,23 @@ export function usePhotoCollection() {
   async function readPhotoInfo(file: File): Promise<PhotoInfo> {
     try {
       const tags = await ExifReader.load(file)
+      console.log('相片基本資訊', tags)
+
+      const make = tags['Make']?.description.split(' ')[0] || '未知廠牌'
+      const rawModel = tags['Model']?.description || '未知相機'
+      const model =
+        make !== '未知廠牌' && rawModel.startsWith(make)
+          ? rawModel.slice(make.length).trim()
+          : rawModel
+
       return {
         date:
           tags['DateTimeOriginal']?.description.split(' ')[0]?.replaceAll(':', '-') || '未知日期',
-        model: tags['Model']?.description || '未知相機',
+        model,
         exposure: tags['ExposureTime']?.description || '未知快門',
         aperture: tags['FNumber']?.description || '未知光圈',
         iso: tags['ISOSpeedRatings']?.description || '未知ISO',
-        make: tags['Make']?.description.split(' ')[0] || '未知廠牌',
+        make,
       }
     } catch (error) {
       console.error('Exif 讀取失敗', error)
