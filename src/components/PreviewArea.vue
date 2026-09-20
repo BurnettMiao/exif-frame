@@ -15,6 +15,7 @@ const layoutStore = useLayoutStore()
 const { previewItems, currentPreviewIndex, activeItem, addPhoto, selectPhoto, deletePhoto } =
   usePhotoCollection()
 
+const maxPhotoCount = 10
 const previewStack = ref<HTMLElement | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
 const currentImage = ref<HTMLImageElement | null>(null)
@@ -390,8 +391,15 @@ watch(activeItem, async (item) => {
 // 圖片上傳
 const handleFileUpload = async (event: Event) => {
   const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (!file) return
+  const files = Array.from(target.files ?? [])
+  if (files.length === 0) return
+
+  const availableSlots = maxPhotoCount - previewItems.value.length
+  const selectedFiles = files.slice(0, availableSlots)
+  if (selectedFiles.length === 0) {
+    target.value = ''
+    return
+  }
 
   const token = ++uploadToken
   const shouldKeepCurrentPreview = previewItems.value.length > 0
@@ -399,15 +407,22 @@ const handleFileUpload = async (event: Event) => {
   isUploadingPhoto.value = true
 
   try {
-    const item = await addPhoto(file, { select: !shouldKeepCurrentPreview })
-    const readyItem = (await item.ready) ?? item
+    let firstReadyItem: PreviewItem | null = null
 
-    if (token !== uploadToken) return
+    for (const [index, file] of selectedFiles.entries()) {
+      const item = await addPhoto(file, { select: !shouldKeepCurrentPreview && index === 0 })
+      const readyItem = (await item.ready) ?? item
 
-    await Promise.all([renderPreviewItem(readyItem), prepareRenderedPreviewUrl(readyItem)])
+      if (token !== uploadToken) return
+
+      await Promise.all([renderPreviewItem(readyItem), prepareRenderedPreviewUrl(readyItem)])
+      firstReadyItem ??= readyItem
+    }
+
+    if (!firstReadyItem) return
 
     const readyIndex = previewItems.value.findIndex(
-      (previewItem) => previewItem.id === readyItem.id,
+      (previewItem) => previewItem.id === firstReadyItem.id,
     )
     if (readyIndex === -1) return
 
@@ -493,6 +508,7 @@ watch(
       class="hidden"
       type="file"
       accept="image/*"
+      multiple
       :disabled="isUploadingPhoto"
     />
 
@@ -570,6 +586,7 @@ watch(
       <ThumbnailStrip
         :items="previewItems"
         :current-index="currentPreviewIndex"
+        :max-count="maxPhotoCount"
         @select="selectThumbnailPhoto"
         @delete="deletePhoto"
       />
