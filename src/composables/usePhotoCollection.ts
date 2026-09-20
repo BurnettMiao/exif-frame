@@ -7,6 +7,8 @@ import { compressImage } from '@/utils/imageUtils'
 export interface PreviewItem {
   id: string
   url: string
+  sourceUrl: string
+  cropUrl?: string
   info: PhotoInfo
   ready?: Promise<PreviewItem>
 }
@@ -16,9 +18,11 @@ interface AddPhotoOptions {
 }
 
 let nextPreviewItemId = 0
-const computedInfo = computed(() => {
-  return
-})
+const previewItems = ref<PreviewItem[]>([])
+const currentPreviewIndex = ref(0)
+const activeItem = computed<PreviewItem | null>(
+  () => previewItems.value[currentPreviewIndex.value] ?? null,
+)
 
 /**
  * 管理照片清單：上傳 → 立即預覽 → 背景讀 EXIF / 壓縮 → 切換 / 刪除
@@ -26,15 +30,9 @@ const computedInfo = computed(() => {
 export function usePhotoCollection() {
   const filterStore = useFilterStore()
 
-  const previewItems = ref<PreviewItem[]>([])
-  const currentPreviewIndex = ref(0)
-  const activeItem = computed<PreviewItem | null>(
-    () => previewItems.value[currentPreviewIndex.value] ?? null,
-  )
-
   function updatePreviewItem(
     target: PreviewItem,
-    patch: Partial<Pick<PreviewItem, 'url' | 'info'>>,
+    patch: Partial<Pick<PreviewItem, 'url' | 'sourceUrl' | 'cropUrl' | 'info'>>,
   ) {
     const index = previewItems.value.findIndex((item) => item.id === target.id)
     if (index === -1) return null
@@ -99,6 +97,7 @@ export function usePhotoCollection() {
     const item: PreviewItem = {
       id: String(nextPreviewItemId++),
       url: originalUrl,
+      sourceUrl: originalUrl,
       info: { error: 'EXIF 讀取中' },
     }
     previewItems.value.push(item)
@@ -115,7 +114,11 @@ export function usePhotoCollection() {
     const compressionPromise = compressImage(file, 1920)
       .then((processedBlob) => {
         const compressedUrl = URL.createObjectURL(processedBlob)
-        const updatedItem = updatePreviewItem(item, { url: compressedUrl })
+        const currentItem = previewItems.value.find((previewItem) => previewItem.id === item.id)
+        const updatedItem = updatePreviewItem(item, {
+          sourceUrl: compressedUrl,
+          url: currentItem?.cropUrl ? currentItem.url : compressedUrl,
+        })
 
         if (updatedItem) {
           URL.revokeObjectURL(originalUrl)
@@ -145,11 +148,48 @@ export function usePhotoCollection() {
     filterStore.setPreviewUrl(item.url)
   }
 
+  function applyCrop(target: PreviewItem, croppedBlob: Blob) {
+    const croppedUrl = URL.createObjectURL(croppedBlob)
+    const previousCropUrl = target.cropUrl
+    const updatedItem = updatePreviewItem(target, {
+      url: croppedUrl,
+      cropUrl: croppedUrl,
+    })
+
+    if (!updatedItem) {
+      URL.revokeObjectURL(croppedUrl)
+      return null
+    }
+
+    if (previousCropUrl && previousCropUrl !== croppedUrl) {
+      URL.revokeObjectURL(previousCropUrl)
+    }
+
+    return updatedItem
+  }
+
+  function resetCrop(target: PreviewItem) {
+    if (!target.cropUrl) return target
+
+    const previousCropUrl = target.cropUrl
+    const updatedItem = updatePreviewItem(target, {
+      url: target.sourceUrl,
+      cropUrl: undefined,
+    })
+
+    URL.revokeObjectURL(previousCropUrl)
+    return updatedItem ?? target
+  }
+
   // 刪除照片並釋放 object URL
   function deletePhoto(index: number) {
     const deletedItem = previewItems.value[index]
-    if (deletedItem?.url) {
-      URL.revokeObjectURL(deletedItem.url)
+    if (deletedItem?.sourceUrl) {
+      URL.revokeObjectURL(deletedItem.sourceUrl)
+    }
+
+    if (deletedItem?.cropUrl) {
+      URL.revokeObjectURL(deletedItem.cropUrl)
     }
 
     previewItems.value.splice(index, 1)
@@ -166,5 +206,14 @@ export function usePhotoCollection() {
     filterStore.setPreviewUrl(newItem.url)
   }
 
-  return { previewItems, currentPreviewIndex, activeItem, addPhoto, selectPhoto, deletePhoto }
+  return {
+    previewItems,
+    currentPreviewIndex,
+    activeItem,
+    addPhoto,
+    selectPhoto,
+    applyCrop,
+    resetCrop,
+    deletePhoto,
+  }
 }

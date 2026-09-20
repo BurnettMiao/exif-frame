@@ -596,10 +596,12 @@ watch(
 
 <style scoped>
 .preview-area {
+  position: relative;
   width: 100%;
   height: 100%;
   background: #f3f4f6;
   padding: 20px;
+  overflow: hidden;
 }
 
 .preview-stack {
