@@ -41,6 +41,13 @@ interface RenderedPreview {
   logo: HTMLImageElement | null
 }
 
+interface StackedPreviewEntry {
+  item: PreviewItem
+  itemIndex: number
+  stackIndex: number
+  isIncoming?: boolean
+}
+
 const setCanvasRef = (element: unknown) => {
   const nextCanvas = element instanceof HTMLCanvasElement ? element : null
   if (canvas.value === nextCanvas) return
@@ -91,7 +98,7 @@ const getPreviewFrameStyle = (item: PreviewItem) => {
 
 const canSelectNextPhoto = computed(() => previewItems.value.length > 1)
 
-const stackedPreviewItems = computed(() => {
+const stackedPreviewItems = computed<StackedPreviewEntry[]>(() => {
   const total = previewItems.value.length
   if (total === 0) return []
 
@@ -106,19 +113,40 @@ const stackedPreviewItems = computed(() => {
   })
 })
 
+const animatedStackedPreviewItems = computed<StackedPreviewEntry[]>(() => {
+  const items = [...stackedPreviewItems.value]
+  const total = previewItems.value.length
+
+  if (!isPreviewAnimating.value || total <= 2) return items
+
+  const incomingItemIndex = (currentPreviewIndex.value + 3) % total
+  const incomingItem = previewItems.value[incomingItemIndex]
+  if (!incomingItem) return items
+
+  items.push({
+    item: incomingItem,
+    itemIndex: incomingItemIndex,
+    stackIndex: 3,
+    isIncoming: true,
+  })
+
+  return items
+})
+
 const previewStackStyle = computed(() => {
   const baseSize = Math.min(previewViewportSize.value.width, previewViewportSize.value.height)
   const stackOffset = baseSize ? Math.min(Math.max(baseSize * 0.028, 18), 48) : 18
   const stackRotation = 1.5
 
   return {
-    '--stack-size': stackedPreviewItems.value.length,
+    '--stack-size': animatedStackedPreviewItems.value.length,
     '--stack-offset': `${stackOffset}px`,
     '--stack-rotation': `${stackRotation}deg`,
   }
 })
 
-const getPreviewCardKey = (item: PreviewItem, stackIndex: number) => {
+const getPreviewCardKey = (item: PreviewItem, stackIndex: number, isIncoming = false) => {
+  if (isIncoming) return `${item.id}-incoming`
   if (previewItems.value.length >= 3) return item.id
   return `${item.id}-${stackIndex}`
 }
@@ -558,16 +586,16 @@ watch(
           :style="previewStackStyle"
         >
           <button
-            v-for="{ item, itemIndex, stackIndex } in stackedPreviewItems"
-            :key="getPreviewCardKey(item, stackIndex)"
+            v-for="{ item, itemIndex, stackIndex, isIncoming } in animatedStackedPreviewItems"
+            :key="getPreviewCardKey(item, stackIndex, isIncoming)"
             type="button"
             class="preview-card"
-            :class="{ 'is-active': stackIndex === 0 }"
+            :class="{ 'is-active': stackIndex === 0 && !isIncoming, 'is-incoming': isIncoming }"
             :style="{ '--stack-index': stackIndex, '--promote-index': Math.max(stackIndex - 1, 0) }"
             @click="selectPreviewCard(itemIndex, stackIndex)"
           >
             <canvas
-              v-if="stackIndex === 0"
+              v-if="stackIndex === 0 && !isIncoming"
               :ref="setCanvasRef"
               class="preview-stack-canvas shadow-xl"
               :style="previewFrameStyle"
@@ -761,6 +789,25 @@ watch(
     )
     scale(calc(1 - var(--promote-index) * 0.045))
     rotate(calc(var(--promote-index) * var(--stack-rotation)));
+}
+
+.preview-stack.is-animating .preview-card.is-incoming {
+  pointer-events: none;
+  animation: preview-card-fade-in 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes preview-card-fade-in {
+  from {
+    opacity: 0;
+    transform: translate(calc(var(--stack-offset) * 3 + 52px), calc(var(--stack-offset) * 3 + 52px))
+      scale(0.86) rotate(calc(var(--stack-rotation) * 3));
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(calc(var(--stack-offset) * 2), calc(var(--stack-offset) * 2))
+      scale(calc(1 - 2 * 0.045)) rotate(calc(var(--stack-rotation) * 2));
+  }
 }
 
 .preview-card:not(.is-active) {
