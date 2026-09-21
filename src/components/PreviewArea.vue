@@ -265,6 +265,23 @@ const preloadUpcomingPreviewAssets = () => {
   stackedPreviewItems.value.forEach(({ item }) => preloadPreviewAssets(item))
 }
 
+const getStackedPreviewItemsFromIndex = (startIndex: number) => {
+  const total = previewItems.value.length
+  if (total === 0) return []
+
+  return Array.from({ length: Math.min(3, total) }, (_, stackIndex) => {
+    return previewItems.value[(startIndex + stackIndex) % total]
+  }).filter((item): item is PreviewItem => !!item)
+}
+
+const preparePreviewStackAssets = async (startIndex: number) => {
+  const items = getStackedPreviewItemsFromIndex(startIndex)
+
+  await Promise.all(
+    items.map((item) => Promise.all([renderPreviewItem(item), prepareRenderedPreviewUrl(item)])),
+  )
+}
+
 const finishPreviewAnimation = async () => {
   try {
     if (previewItems.value.length <= 1) return
@@ -301,11 +318,13 @@ const selectNextPhoto = async () => {
 
   const nextItem = previewItems.value[(currentPreviewIndex.value + 1) % previewItems.value.length]
   if (!nextItem) return
+  const nextIndex = previewItems.value.findIndex((item) => item.id === nextItem.id)
+  if (nextIndex === -1) return
 
   isPreviewPreparing.value = true
   try {
-    await Promise.all([renderPreviewItem(nextItem), prepareRenderedPreviewUrl(nextItem)])
-    preloadPreviewAssets(nextItem)
+    await preparePreviewStackAssets(nextIndex)
+    getStackedPreviewItemsFromIndex(nextIndex).forEach((item) => preloadPreviewAssets(item))
   } catch (error) {
     console.error('下一張預覽準備失敗', error)
     return
