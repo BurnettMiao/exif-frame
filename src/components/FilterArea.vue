@@ -13,28 +13,23 @@ const filterStore = useFilterStore()
 const filterDetails = ref<FilterOption[]>([
   { name: '原圖', details: 'none' },
 
-  // 色彩調整
-  { name: '鮮豔', details: 'contrast(1.3) saturate(1.45)' },
-  { name: '柔和', details: 'contrast(0.95) saturate(0.85)' },
-  { name: '明亮', details: 'brightness(1.15) contrast(1.1)' },
-  { name: '暗調', details: 'brightness(0.85) contrast(1.2)' },
+  // 常用色調
+  { name: '鮮明', details: 'contrast(1.18) saturate(1.22)' },
+  { name: '明亮', details: 'brightness(1.1) contrast(1.06) saturate(1.05)' },
+  { name: '柔和', details: 'brightness(1.04) contrast(0.94) saturate(0.9)' },
+  { name: '暖色', details: 'sepia(0.16) saturate(1.08) brightness(1.03)' },
+  { name: '冷色', details: 'hue-rotate(350deg) saturate(0.92) contrast(1.04) brightness(1.02)' },
 
-  // 復古風
-  { name: '復古', details: 'sepia(0.7) contrast(0.95)' },
-  { name: '老照片', details: 'sepia(0.85) contrast(1.05) brightness(0.95)' },
-  { name: '冷調', details: 'hue-rotate(200deg) saturate(1.2) contrast(1.05)' },
-  { name: '暖調', details: 'hue-rotate(20deg) saturate(1.25) contrast(1.1)' },
+  // 風格化
+  { name: '電影感', details: 'contrast(1.22) saturate(0.82) brightness(0.96)' },
+  { name: '底片', details: 'sepia(0.22) contrast(1.08) saturate(0.92) brightness(1.03)' },
+  { name: '復古', details: 'sepia(0.38) contrast(0.96) saturate(0.86)' },
+  { name: '淡雅', details: 'brightness(1.08) contrast(0.9) saturate(0.78)' },
+  { name: '暗調', details: 'brightness(0.9) contrast(1.18) saturate(0.92)' },
 
-  // 黑白與特殊效果
+  // 黑白
   { name: '黑白', details: 'grayscale(1)' },
-  { name: '高反差黑白', details: 'grayscale(1) contrast(1.6)' },
-  { name: '夢幻', details: 'contrast(1.1) saturate(1.6) brightness(1.1)' },
-  { name: '電影感', details: 'contrast(1.25) saturate(0.85) brightness(0.95)' },
-
-  // 進階效果
-  { name: '清新', details: 'saturate(1.35) brightness(1.08)' },
-  { name: '復古電影', details: 'sepia(0.4) contrast(1.15) saturate(0.9)' },
-  { name: '鮮明', details: 'contrast(1.4) saturate(1.3)' },
+  { name: '高反差黑白', details: 'grayscale(1) contrast(1.45)' },
 ])
 
 const selectedFilter = (index: number) => {
