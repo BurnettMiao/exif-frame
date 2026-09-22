@@ -64,7 +64,7 @@ const selectedFilter = (index: number) => {
           class="aspect-4/3 w-full overflow-hidden rounded-lg border border-gray-100 shadow-sm max-lg:h-[84px]"
         >
           <img
-            :src="filterStore.currentPreviewUrl || defaultBlur"
+            :src="defaultBlur"
             :style="{ filter: filter.details }"
             class="w-full max-w-52.5 h-full object-center object-cover"
             alt=""
