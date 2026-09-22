@@ -16,11 +16,12 @@ const selectedLayout = (index: number) => {
     <div
       class="flex flex-1 flex-col gap-y-4 overflow-y-scroll max-lg:flex-row max-lg:gap-3 max-lg:overflow-x-auto max-lg:overflow-y-hidden max-lg:pb-1.5"
     >
-      <div
-        @click="selectedLayout(index)"
+      <button
         v-for="(layout, index) in layoutStore.layouts"
         :key="layout.name"
-        class="group cursor-pointer max-lg:w-28 max-lg:flex-[0_0_7rem]"
+        type="button"
+        class="group cursor-pointer border-0 bg-transparent p-0 text-left [touch-action:manipulation] max-lg:w-28 max-lg:flex-[0_0_7rem]"
+        @click="selectedLayout(index)"
       >
         <div
           class="aspect-4/3 w-full overflow-hidden rounded-lg border border-gray-100 shadow-sm max-lg:h-[84px]"
@@ -37,7 +38,7 @@ const selectedLayout = (index: number) => {
         >
           {{ layout.name }}
         </div>
-      </div>
+      </button>
     </div>
   </div>
 </template>

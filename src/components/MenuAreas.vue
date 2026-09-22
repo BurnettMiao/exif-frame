@@ -70,7 +70,7 @@ const handleSelected = (name: EditorPanelName) => {
     </div>
 
     <div
-      class="absolute top-0 left-[65px] h-full max-lg:relative max-lg:left-0 max-lg:w-full max-lg:min-h-0 max-lg:overflow-hidden"
+      class="absolute top-0 left-[65px] h-full max-lg:relative max-lg:z-20 max-lg:left-0 max-lg:w-full max-lg:min-h-0 max-lg:overflow-hidden"
       :class="isMobilePanelOpen ? 'max-lg:h-auto max-lg:max-h-[190px]' : 'max-lg:hidden'"
     >
       <LayoutArea v-if="editorStore.currentPanel === '排版區'" />

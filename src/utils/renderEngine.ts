@@ -10,6 +10,169 @@ export interface RenderFrameParams {
   filter: string
 }
 
+let canvasFilterSupported: boolean | null = null
+
+const clampColor = (value: number) => Math.min(255, Math.max(0, value))
+
+const parseFilterAmount = (value: string, fallback = 1) => {
+  const trimmedValue = value.trim()
+  if (trimmedValue.endsWith('%')) {
+    const percentage = Number.parseFloat(trimmedValue)
+    return Number.isFinite(percentage) ? percentage / 100 : fallback
+  }
+
+  const amount = Number.parseFloat(trimmedValue)
+  return Number.isFinite(amount) ? amount : fallback
+}
+
+const parseFilterAngle = (value: string) => {
+  const trimmedValue = value.trim()
+  const amount = Number.parseFloat(trimmedValue)
+  if (!Number.isFinite(amount)) return 0
+  if (trimmedValue.endsWith('rad')) return (amount * 180) / Math.PI
+  if (trimmedValue.endsWith('turn')) return amount * 360
+  return amount
+}
+
+const supportsCanvasFilter = () => {
+  if (canvasFilterSupported !== null) return canvasFilterSupported
+  if (typeof document === 'undefined') {
+    canvasFilterSupported = false
+    return canvasFilterSupported
+  }
+
+  const testCanvas = document.createElement('canvas')
+  testCanvas.width = 1
+  testCanvas.height = 1
+  const testCtx = testCanvas.getContext('2d')
+  if (!testCtx || !('filter' in testCtx)) {
+    canvasFilterSupported = false
+    return canvasFilterSupported
+  }
+
+  testCtx.filter = 'grayscale(1)'
+  testCtx.fillStyle = 'rgb(255, 0, 0)'
+  testCtx.fillRect(0, 0, 1, 1)
+
+  const testPixel = testCtx.getImageData(0, 0, 1, 1).data
+  const red = testPixel[0] ?? 0
+  const green = testPixel[1] ?? 0
+  const blue = testPixel[2] ?? 0
+  canvasFilterSupported = red === green && green === blue
+  return canvasFilterSupported
+}
+
+const applyMatrix = (
+  data: Uint8ClampedArray,
+  index: number,
+  matrix: [number, number, number, number, number, number, number, number, number],
+) => {
+  const red = data[index] ?? 0
+  const green = data[index + 1] ?? 0
+  const blue = data[index + 2] ?? 0
+
+  data[index] = clampColor(matrix[0] * red + matrix[1] * green + matrix[2] * blue)
+  data[index + 1] = clampColor(matrix[3] * red + matrix[4] * green + matrix[5] * blue)
+  data[index + 2] = clampColor(matrix[6] * red + matrix[7] * green + matrix[8] * blue)
+}
+
+const applyManualFilter = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  filter: string,
+) => {
+  if (!filter || filter === 'none') return
+
+  const imageData = ctx.getImageData(x, y, width, height)
+  const { data } = imageData
+  const operations = [...filter.matchAll(/([a-z-]+)\(([^)]+)\)/g)]
+
+  for (const operation of operations) {
+    const name = operation[1]
+    const rawValue = operation[2]
+    if (!name || !rawValue) continue
+
+    const amount = parseFilterAmount(rawValue)
+
+    for (let index = 0; index < data.length; index += 4) {
+      switch (name) {
+        case 'brightness':
+          data[index] = clampColor((data[index] ?? 0) * amount)
+          data[index + 1] = clampColor((data[index + 1] ?? 0) * amount)
+          data[index + 2] = clampColor((data[index + 2] ?? 0) * amount)
+          break
+        case 'contrast':
+          data[index] = clampColor(((data[index] ?? 0) - 128) * amount + 128)
+          data[index + 1] = clampColor(((data[index + 1] ?? 0) - 128) * amount + 128)
+          data[index + 2] = clampColor(((data[index + 2] ?? 0) - 128) * amount + 128)
+          break
+        case 'saturate':
+          applyMatrix(data, index, [
+            0.213 + 0.787 * amount,
+            0.715 - 0.715 * amount,
+            0.072 - 0.072 * amount,
+            0.213 - 0.213 * amount,
+            0.715 + 0.285 * amount,
+            0.072 - 0.072 * amount,
+            0.213 - 0.213 * amount,
+            0.715 - 0.715 * amount,
+            0.072 + 0.928 * amount,
+          ])
+          break
+        case 'grayscale':
+          applyMatrix(data, index, [
+            0.2126 + 0.7874 * (1 - amount),
+            0.7152 - 0.7152 * (1 - amount),
+            0.0722 - 0.0722 * (1 - amount),
+            0.2126 - 0.2126 * (1 - amount),
+            0.7152 + 0.2848 * (1 - amount),
+            0.0722 - 0.0722 * (1 - amount),
+            0.2126 - 0.2126 * (1 - amount),
+            0.7152 - 0.7152 * (1 - amount),
+            0.0722 + 0.9278 * (1 - amount),
+          ])
+          break
+        case 'sepia':
+          applyMatrix(data, index, [
+            1 - amount + 0.393 * amount,
+            0.769 * amount,
+            0.189 * amount,
+            0.349 * amount,
+            1 - amount + 0.686 * amount,
+            0.168 * amount,
+            0.272 * amount,
+            0.534 * amount,
+            1 - amount + 0.131 * amount,
+          ])
+          break
+        case 'hue-rotate': {
+          const angle = (parseFilterAngle(rawValue) * Math.PI) / 180
+          const cos = Math.cos(angle)
+          const sin = Math.sin(angle)
+
+          applyMatrix(data, index, [
+            0.213 + 0.787 * cos - 0.213 * sin,
+            0.715 - 0.715 * cos - 0.715 * sin,
+            0.072 - 0.072 * cos + 0.928 * sin,
+            0.213 - 0.213 * cos + 0.143 * sin,
+            0.715 + 0.285 * cos + 0.14 * sin,
+            0.072 - 0.072 * cos - 0.283 * sin,
+            0.213 - 0.213 * cos - 0.787 * sin,
+            0.715 - 0.715 * cos + 0.715 * sin,
+            0.072 + 0.928 * cos + 0.072 * sin,
+          ])
+          break
+        }
+      }
+    }
+  }
+
+  ctx.putImageData(imageData, x, y)
+}
+
 /**
  * 統一的繪製函式：畫面上看到的，就是最終匯出的樣子
  */
@@ -92,9 +255,14 @@ export function renderFrame({
 
   // 畫照片（套用濾鏡）
   ctx.save()
-  ctx.filter = filter
+  if (supportsCanvasFilter()) {
+    ctx.filter = filter
+  }
   ctx.drawImage(image, padLeft, padTop, image.width, image.height)
   ctx.restore()
+  if (!supportsCanvasFilter()) {
+    applyManualFilter(ctx, padLeft, padTop, image.width, image.height, filter)
+  }
 
   let centeredGroupLogoX: number | null = null
   let centeredGroupInfoX: number | null = null
