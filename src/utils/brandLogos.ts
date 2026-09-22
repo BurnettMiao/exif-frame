@@ -3,6 +3,7 @@ import brandFuji from '@/assets/logos/fujifilm_logo.svg'
 import brandCanon from '@/assets/logos/canon_logo.svg'
 import brandNikon from '@/assets/logos/nikon_logo.svg'
 import brandApple from '@/assets/logos/apple_logo.svg'
+import brandGoogle from '@/assets/logos/google_logo.svg'
 
 // 廠牌 → logo 資源對應，新增品牌只要在此加一筆
 const BRAND_LOGOS: Record<string, string> = {
@@ -11,6 +12,7 @@ const BRAND_LOGOS: Record<string, string> = {
   Canon: brandCanon,
   FUJIFILM: brandFuji,
   Apple: brandApple,
+  Google: brandGoogle,
 }
 
 /**
