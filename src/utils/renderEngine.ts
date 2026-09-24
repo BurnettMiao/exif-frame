@@ -238,17 +238,6 @@ const getLineScale = (role: DisplayLineRole) => {
   }
 }
 
-const getLineColor = (role: DisplayLineRole) => {
-  switch (role) {
-    case 'title':
-      return '#4b5563'
-    case 'caption':
-      return '#6b7280'
-    default:
-      return '#C0C0C0'
-  }
-}
-
 const measureTextBlock = (
   ctx: CanvasRenderingContext2D,
   lines: DisplayLine[],
@@ -288,12 +277,22 @@ export function renderFrame({
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
-  const { padding, gapRatio, logoScale, infoPosition, logoPosition } = layout
+  const {
+    padding,
+    gapRatio,
+    logoScale,
+    fontScale,
+    backgroundColor,
+    primaryTextColor,
+    secondaryTextColor,
+    infoPosition,
+    logoPosition,
+  } = layout
 
   // ===== Canvas 照片＋info高度（全部依圖片最大值比例計算）=====
   const base = Math.max(image.width, image.height)
   // 1. 字體大小 = 圖片最大值的 3%
-  const infoLineHeight = Math.round(base * 0.03)
+  const infoLineHeight = Math.round(base * 0.03 * fontScale)
   // 2. 間距 = 圖片最大值的 4%
   const infoPadding = Math.round(base * 0.04)
 
@@ -357,7 +356,7 @@ export function renderFrame({
   canvas.height = image.height + padTop + padBottom + bottomContentHeight
 
   // 底色（避免 jpg 匯出時資訊區變黑）
-  ctx.fillStyle = '#ffffff'
+  ctx.fillStyle = backgroundColor
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
   // 畫照片（套用濾鏡）
@@ -460,7 +459,8 @@ export function renderFrame({
     displayLines.forEach((line, index) => {
       const fontSize = infoLineHeight * getLineScale(line.role)
       ctx.font = `${fontSize}px monospace`
-      ctx.fillStyle = getLineColor(line.role)
+      ctx.fillStyle =
+        line.role === 'title' || line.role === 'caption' ? primaryTextColor : secondaryTextColor
       ctx.fillText(line.text, x, y)
       y += fontSize
       if (index < displayLines.length - 1) {

@@ -194,7 +194,7 @@ const getPreviewRenderKey = (item: PreviewItem) =>
     item.url,
     JSON.stringify(item.info),
     JSON.stringify(item.infoVisibility),
-    layoutStore.currentIndex,
+    JSON.stringify(layoutStore.currentLayout),
     currentFilter.value,
   ].join('|')
 
@@ -540,7 +540,7 @@ watch(
 )
 
 watch(
-  () => layoutStore.currentIndex,
+  () => layoutStore.currentLayout,
   () => {
     clearRenderedPreviewCaches()
     render()
