@@ -193,6 +193,7 @@ const getPreviewRenderKey = (item: PreviewItem) =>
     item.id,
     item.url,
     JSON.stringify(item.info),
+    JSON.stringify(item.infoVisibility),
     layoutStore.currentIndex,
     currentFilter.value,
   ].join('|')
@@ -212,6 +213,7 @@ const renderPreviewItem = (item: PreviewItem): Promise<RenderedPreview> => {
       image,
       layout: layoutStore.currentLayout,
       info: item.info,
+      infoVisibility: item.infoVisibility,
       logo,
       filter: currentFilter.value,
     })
@@ -404,6 +406,7 @@ const render = () => {
     image: currentImage.value,
     layout: layoutStore.currentLayout,
     info: activeItem.value?.info ?? null,
+    infoVisibility: activeItem.value?.infoVisibility ?? null,
     logo: logoImage.value,
     filter: currentFilter.value,
   })

@@ -1,11 +1,19 @@
-import type { PhotoInfo } from '@/types/previewArea'
+import type { PhotoInfo, PhotoInfoVisibility } from '@/types/previewArea'
 import type { FrameLayout } from '@/types/layout'
+
+type DisplayLineRole = 'title' | 'detail' | 'muted' | 'caption'
+
+interface DisplayLine {
+  text: string
+  role: DisplayLineRole
+}
 
 export interface RenderFrameParams {
   canvas: HTMLCanvasElement
   image: HTMLImageElement
   layout: FrameLayout
   info: PhotoInfo | null
+  infoVisibility: PhotoInfoVisibility | null
   logo: HTMLImageElement | null
   filter: string
 }
@@ -173,6 +181,98 @@ const applyManualFilter = (
   ctx.putImageData(imageData, x, y)
 }
 
+const getVisibleText = (value: unknown) => {
+  if (value == null) return ''
+  return String(value).trim()
+}
+
+const buildDisplayLines = (
+  info: PhotoInfo | null,
+  visibility: PhotoInfoVisibility | null,
+): DisplayLine[] => {
+  if (!info || info.error || !visibility) return []
+
+  const lines: DisplayLine[] = []
+  const camera = getVisibleText(info.model)
+
+  if (visibility.camera && camera) {
+    lines.push({ text: `Shot on ${camera}`, role: 'title' })
+  }
+
+  const detailParts = [
+    visibility.lens ? getVisibleText(info.lens) : '',
+    visibility.aperture ? getVisibleText(info.aperture) : '',
+    visibility.exposure ? getVisibleText(info.exposure) : '',
+    visibility.iso ? `ISO ${getVisibleText(info.iso).replace(/^ISO\s*/i, '')}` : '',
+  ].filter(Boolean)
+
+  if (detailParts.length > 0) {
+    lines.push({ text: detailParts.join(' | '), role: 'detail' })
+  }
+
+  const metaParts = [
+    visibility.location ? getVisibleText(info.location) : '',
+    visibility.date ? getVisibleText(info.date) : '',
+  ].filter(Boolean)
+
+  if (metaParts.length > 0) {
+    lines.push({ text: metaParts.join(' | '), role: 'muted' })
+  }
+
+  const caption = visibility.caption ? getVisibleText(info.caption) : ''
+  if (caption) {
+    lines.push({ text: caption, role: 'caption' })
+  }
+
+  return lines
+}
+
+const getLineScale = (role: DisplayLineRole) => {
+  switch (role) {
+    case 'title':
+      return 1.25
+    case 'caption':
+      return 1.05
+    default:
+      return 0.95
+  }
+}
+
+const getLineColor = (role: DisplayLineRole) => {
+  switch (role) {
+    case 'title':
+      return '#4b5563'
+    case 'caption':
+      return '#6b7280'
+    default:
+      return '#C0C0C0'
+  }
+}
+
+const measureTextBlock = (
+  ctx: CanvasRenderingContext2D,
+  lines: DisplayLine[],
+  baseLineHeight: number,
+  lineGap: number,
+) => {
+  let width = 0
+  let height = 0
+
+  ctx.save()
+  lines.forEach((line, index) => {
+    const fontSize = baseLineHeight * getLineScale(line.role)
+    ctx.font = `${fontSize}px monospace`
+    width = Math.max(width, ctx.measureText(line.text).width)
+    height += fontSize
+    if (index < lines.length - 1) {
+      height += lineGap
+    }
+  })
+  ctx.restore()
+
+  return { width, height }
+}
+
 /**
  * 統一的繪製函式：畫面上看到的，就是最終匯出的樣子
  */
@@ -181,6 +281,7 @@ export function renderFrame({
   image,
   layout,
   info,
+  infoVisibility,
   logo,
   filter,
 }: RenderFrameParams): void {
@@ -204,13 +305,14 @@ export function renderFrame({
 
   // Gap 也為比例值
   const gap = Math.round(base * gapRatio)
+  const lineGap = Math.max(4, Math.round(infoLineHeight * 0.58))
 
   // 3. 是否有資訊區
-  const hasInfo = !!info && !info.error
-  const infoTitleText = hasInfo ? `Shot on ${info.model}` : ''
-  const infoDetailText = hasInfo ? `${info.aperture} | ${info.exposure}s | ISO ${info.iso}` : ''
+  const displayLines = buildDisplayLines(info, infoVisibility)
+  const hasInfo = displayLines.length > 0
+  const textBlock = measureTextBlock(ctx, displayLines, infoLineHeight, lineGap)
   // 4. 資訊區
-  const infoHeight = hasInfo ? infoLineHeight * 3 + infoPadding * 2 : 0
+  const infoHeight = hasInfo ? Math.ceil(textBlock.height + infoPadding * 2) : 0
 
   // 統一算好 Logo 尺寸（使用 base，讓 logo 跟圖片最大邊比例一致）
   let logoWidth = logo ? base * logoScale : 0
@@ -233,16 +335,21 @@ export function renderFrame({
   // 資訊列定位在「下置中」時，底欄需容納 logo 區塊 + 分隔線與資訊列的堆疊高度
   // 0.95：字體視覺高度約為 line-height 的 95%，避免底部多出一條縫
   const centerBottomContentHeight =
-    infoPosition === 'center-bottom'
-      ? logoBlockHeight + infoPadding / 2 + infoLineHeight / 2 + gap + infoLineHeight * 0.95
-      : 0
+    infoPosition === 'center-bottom' ? logoBlockHeight + infoPadding / 2 + textBlock.height : 0
 
   // logo 定位在「上置中」時，底欄需容納整個 logo 區塊
   const logoTopContentHeight = logoPosition === 'center-top' ? logoBlockHeight : 0
+  const logoSideContentHeight =
+    logo && logoPosition !== 'center-top' ? logoHeight + infoPadding * 2 : 0
 
   // 取三種定位情境的最大值並向上取整，確保任何組合下內容都不被裁切
   const bottomContentHeight = Math.ceil(
-    Math.max(defaultBottomContentHeight, centerBottomContentHeight, logoTopContentHeight),
+    Math.max(
+      defaultBottomContentHeight,
+      centerBottomContentHeight,
+      logoTopContentHeight,
+      logoSideContentHeight,
+    ),
   )
 
   // ***** 此處為全部 canvas 最後的高度與寬度 *****
@@ -268,16 +375,8 @@ export function renderFrame({
   let centeredGroupInfoX: number | null = null
 
   if (infoPosition === 'center-right' && logoPosition === 'center-left') {
-    ctx.save()
-    ctx.font = `${infoLineHeight * 1.25}px monospace`
-    const titleWidth = hasInfo ? ctx.measureText(infoTitleText).width : 0
-    ctx.font = `${infoLineHeight * 0.95}px monospace`
-    const detailWidth = hasInfo ? ctx.measureText(infoDetailText).width : 0
-    ctx.restore()
-
-    const infoWidth = Math.max(titleWidth, detailWidth)
     const visibleGap = logo ? gap : 0
-    const groupWidth = logoWidth + visibleGap + infoWidth
+    const groupWidth = logoWidth + visibleGap + textBlock.width
     const groupStartX = padLeft + image.width / 2 - groupWidth / 2
 
     centeredGroupLogoX = groupStartX
@@ -314,8 +413,7 @@ export function renderFrame({
           padTop +
           image.height +
           infoPadding +
-          infoLineHeight / 2 +
-          (gap + infoLineHeight * 0.95) / 2 -
+          Math.max(textBlock.height, logoHeight) / 2 -
           logoHeight / 2
     }
 
@@ -324,8 +422,6 @@ export function renderFrame({
 
   // 畫 EXIF 資訊（不受濾鏡影響）
   if (hasInfo) {
-    ctx.fillStyle = '#4b5563'
-    ctx.font = `${infoLineHeight}px monospace`
     ctx.textBaseline = 'top'
     ctx.textAlign = 'right'
 
@@ -361,12 +457,15 @@ export function renderFrame({
         y = padTop + image.height + infoPadding
     }
 
-    y += infoLineHeight / 2
-    ctx.font = `${infoLineHeight * 1.25}px monospace`
-    ctx.fillText(infoTitleText, x, y)
-    y += gap
-    ctx.font = `${infoLineHeight * 0.95}px monospace`
-    ctx.fillStyle = '#C0C0C0'
-    ctx.fillText(infoDetailText, x, y)
+    displayLines.forEach((line, index) => {
+      const fontSize = infoLineHeight * getLineScale(line.role)
+      ctx.font = `${fontSize}px monospace`
+      ctx.fillStyle = getLineColor(line.role)
+      ctx.fillText(line.text, x, y)
+      y += fontSize
+      if (index < displayLines.length - 1) {
+        y += lineGap
+      }
+    })
   }
 }

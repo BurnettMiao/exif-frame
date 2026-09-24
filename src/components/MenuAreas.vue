@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import FilterArea from '@/components/FilterArea.vue'
 import LayoutArea from '@/components/LayoutArea.vue'
+import InfoArea from '@/components/InfoArea.vue'
 import { useEditorStore, type EditorPanelName } from '@/stores/editorStore'
 
 type Menu = {
@@ -15,6 +16,10 @@ const menus = ref<Menu[]>([
   {
     icon: 'ri-layout-line',
     name: '排版區',
+  },
+  {
+    icon: 'ri-file-info-line',
+    name: '資訊區',
   },
   {
     icon: 'ri-color-filter-line',
@@ -44,7 +49,7 @@ const handleSelected = (name: EditorPanelName) => {
     class="relative flex w-full max-w-[305px] items-start h-full max-lg:h-auto max-lg:max-w-none max-lg:flex-col-reverse max-lg:border-t max-lg:border-gray-200 max-lg:bg-white"
   >
     <div
-      class="group relative z-10 flex h-full w-[65px] flex-col gap-1 overflow-hidden border-x border-gray-200 bg-white px-2 py-4 transition-[width] duration-150 ease-in-out hover:w-[137px] max-lg:h-[58px] max-lg:w-full max-lg:flex-row max-lg:justify-around max-lg:gap-0 max-lg:border-x-0 max-lg:border-t max-lg:px-2 max-lg:pt-1.5 max-lg:pb-2 max-lg:hover:w-full"
+      class="group relative z-10 flex h-full w-[65px] flex-col gap-3 overflow-hidden border-x border-gray-200 bg-white px-2 py-4 transition-[width] duration-150 ease-in-out hover:w-[137px] max-lg:h-[58px] max-lg:w-full max-lg:flex-row max-lg:justify-around max-lg:gap-0 max-lg:border-x-0 max-lg:border-t max-lg:px-2 max-lg:pt-1.5 max-lg:pb-2 max-lg:hover:w-full"
     >
       <button
         v-for="menu in menus"
@@ -74,6 +79,7 @@ const handleSelected = (name: EditorPanelName) => {
       :class="isMobilePanelOpen ? 'max-lg:h-auto max-lg:max-h-[190px]' : 'max-lg:hidden'"
     >
       <LayoutArea v-if="editorStore.currentPanel === '排版區'" />
+      <InfoArea v-if="editorStore.currentPanel === '資訊區'" />
       <FilterArea v-if="editorStore.currentPanel === '濾鏡區'" />
     </div>
   </div>

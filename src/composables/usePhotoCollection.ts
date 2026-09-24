@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import ExifReader from 'exifreader'
-import type { PhotoInfo } from '@/types/previewArea'
+import type { PhotoInfo, PhotoInfoVisibility } from '@/types/previewArea'
 import { useFilterStore } from '@/stores/filterStore'
 import { compressImage } from '@/utils/imageUtils'
 
@@ -10,6 +10,8 @@ export interface PreviewItem {
   sourceUrl: string
   cropUrl?: string
   info: PhotoInfo
+  originalInfo: PhotoInfo
+  infoVisibility: PhotoInfoVisibility
   ready?: Promise<PreviewItem>
 }
 
@@ -24,6 +26,23 @@ const activeItem = computed<PreviewItem | null>(
   () => previewItems.value[currentPreviewIndex.value] ?? null,
 )
 
+const getTagDescription = (tag: unknown) => {
+  if (!tag || typeof tag !== 'object' || !('description' in tag)) return ''
+  const description = (tag as { description?: unknown }).description
+  return description == null ? '' : String(description)
+}
+
+export const defaultPhotoInfoVisibility = (): PhotoInfoVisibility => ({
+  camera: true,
+  lens: false,
+  date: false,
+  location: false,
+  caption: false,
+  exposure: true,
+  aperture: true,
+  iso: true,
+})
+
 /**
  * 管理照片清單：上傳 → 立即預覽 → 背景讀 EXIF / 壓縮 → 切換 / 刪除
  */
@@ -32,7 +51,12 @@ export function usePhotoCollection() {
 
   function updatePreviewItem(
     target: PreviewItem,
-    patch: Partial<Pick<PreviewItem, 'url' | 'sourceUrl' | 'cropUrl' | 'info'>>,
+    patch: Partial<
+      Pick<
+        PreviewItem,
+        'url' | 'sourceUrl' | 'cropUrl' | 'info' | 'originalInfo' | 'infoVisibility'
+      >
+    >,
   ) {
     const index = previewItems.value.findIndex((item) => item.id === target.id)
     if (index === -1) return null
@@ -55,8 +79,10 @@ export function usePhotoCollection() {
       const tags = await ExifReader.load(file)
       console.log('相片基本資訊', tags)
 
-      const make = tags['Make']?.description.split(' ')[0] || '未知廠牌'
-      const rawModel = tags['Model']?.description || '未知相機'
+      const rawMake = getTagDescription(tags['Make'])
+      const make = rawMake.split(' ')[0] || '未知廠牌'
+      const rawModel = getTagDescription(tags['Model']) || '未知相機'
+      const lens = getTagDescription(tags['LensModel']) || getTagDescription(tags['Lens'])
       const model =
         make !== '未知廠牌' && rawModel.startsWith(make)
           ? rawModel.slice(make.length).trim()
@@ -64,11 +90,15 @@ export function usePhotoCollection() {
 
       return {
         date:
-          tags['DateTimeOriginal']?.description.split(' ')[0]?.replaceAll(':', '-') || '未知日期',
+          getTagDescription(tags['DateTimeOriginal']).split(' ')[0]?.replaceAll(':', '-') ||
+          '未知日期',
         model,
-        exposure: tags['ExposureTime']?.description || '未知快門',
-        aperture: tags['FNumber']?.description || '未知光圈',
-        iso: tags['ISOSpeedRatings']?.description || '未知ISO',
+        exposure: getTagDescription(tags['ExposureTime']) || '未知快門',
+        aperture: getTagDescription(tags['FNumber']) || '未知光圈',
+        iso: getTagDescription(tags['ISOSpeedRatings']) || '未知ISO',
+        lens,
+        location: '',
+        caption: '',
         make,
       }
     } catch (error) {
@@ -99,6 +129,8 @@ export function usePhotoCollection() {
       url: originalUrl,
       sourceUrl: originalUrl,
       info: { error: 'EXIF 讀取中' },
+      originalInfo: { error: 'EXIF 讀取中' },
+      infoVisibility: defaultPhotoInfoVisibility(),
     }
     previewItems.value.push(item)
 
@@ -108,7 +140,7 @@ export function usePhotoCollection() {
     }
 
     const infoPromise = readPhotoInfo(file).then((photoInfoData) => {
-      return updatePreviewItem(item, { info: photoInfoData }) ?? item
+      return updatePreviewItem(item, { info: photoInfoData, originalInfo: photoInfoData }) ?? item
     })
 
     const compressionPromise = compressImage(file, 1920)
@@ -181,6 +213,32 @@ export function usePhotoCollection() {
     return updatedItem ?? target
   }
 
+  function updatePhotoInfo(target: PreviewItem, patch: Partial<PhotoInfo>) {
+    return updatePreviewItem(target, {
+      info: {
+        ...target.info,
+        ...patch,
+        error: undefined,
+      },
+    })
+  }
+
+  function setInfoVisibility(target: PreviewItem, key: keyof PhotoInfoVisibility, value: boolean) {
+    return updatePreviewItem(target, {
+      infoVisibility: {
+        ...target.infoVisibility,
+        [key]: value,
+      },
+    })
+  }
+
+  function resetPhotoInfo(target: PreviewItem) {
+    return updatePreviewItem(target, {
+      info: { ...target.originalInfo },
+      infoVisibility: defaultPhotoInfoVisibility(),
+    })
+  }
+
   // 刪除照片並釋放 object URL
   function deletePhoto(index: number) {
     const deletedItem = previewItems.value[index]
@@ -214,6 +272,9 @@ export function usePhotoCollection() {
     selectPhoto,
     applyCrop,
     resetCrop,
+    updatePhotoInfo,
+    setInfoVisibility,
+    resetPhotoInfo,
     deletePhoto,
   }
 }
