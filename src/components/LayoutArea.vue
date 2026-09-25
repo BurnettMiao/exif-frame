@@ -1,23 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useLayoutStore } from '@/stores/layoutStore'
-import type { FrameLayout } from '@/types/layout'
 import defaultPic from '@/assets/DSC00255.jpg'
 
 const layoutStore = useLayoutStore()
-
-type PlacementOption = {
-  name: string
-  infoPosition: FrameLayout['infoPosition']
-  logoPosition: FrameLayout['logoPosition']
-}
-
-const placementOptions: PlacementOption[] = [
-  { name: '左 Logo', infoPosition: 'right', logoPosition: 'left' },
-  { name: '右 Logo', infoPosition: 'left', logoPosition: 'right' },
-  { name: '置中橫排', infoPosition: 'center-right', logoPosition: 'center-left' },
-  { name: '置中上下', infoPosition: 'center-bottom', logoPosition: 'center-top' },
-]
 
 const mobileLayoutMode = ref<'presets' | 'details'>('presets')
 
@@ -36,7 +22,7 @@ const updateColor = (event: Event, update: (value: string) => void) => {
   update((event.target as HTMLInputElement).value)
 }
 
-const isCurrentPlacement = (option: PlacementOption) =>
+const isCurrentPlacement = (option: (typeof layoutStore.layoutPlacements)[number]) =>
   layoutStore.currentLayout.infoPosition === option.infoPosition &&
   layoutStore.currentLayout.logoPosition === option.logoPosition
 </script>
@@ -58,13 +44,13 @@ const isCurrentPlacement = (option: PlacementOption) =>
           >
             <div
               class="aspect-4/3 w-full overflow-hidden rounded-lg border border-gray-100 shadow-sm"
-              :class="{ 'ring-2 ring-amber-400': layoutStore.currentIndex === index }"
+              :class="{ 'ring-2 ring-amber-400': layoutStore.currentPlacementIndex === index }"
             >
               <img :src="defaultPic" class="h-full w-full object-cover object-center" alt="" />
             </div>
             <div
               class="mt-1 text-center text-xs group-hover:text-amber-600"
-              :class="{ 'text-amber-600': layoutStore.currentIndex === index }"
+              :class="{ 'text-amber-600': layoutStore.currentPlacementIndex === index }"
             >
               {{ layout.name }}
             </div>
@@ -76,24 +62,6 @@ const isCurrentPlacement = (option: PlacementOption) =>
         class="space-y-4 rounded-lg border border-gray-100 bg-gray-50 p-3 max-lg:w-72 max-lg:flex-[0_0_18rem]"
       >
         <div class="text-sm font-semibold text-gray-900">細節調整</div>
-
-        <div>
-          <div class="mb-2 text-xs text-gray-600">資訊列位置</div>
-          <div class="grid grid-cols-2 gap-2">
-            <button
-              v-for="option in placementOptions"
-              :key="option.name"
-              type="button"
-              class="h-8 rounded-md border bg-white px-2 text-xs text-gray-700 hover:border-amber-300 hover:text-amber-600"
-              :class="
-                isCurrentPlacement(option) ? 'border-amber-400 text-amber-600' : 'border-gray-200'
-              "
-              @click="layoutStore.updatePlacement(option.infoPosition, option.logoPosition)"
-            >
-              {{ option.name }}
-            </button>
-          </div>
-        </div>
 
         <label class="block">
           <div class="mb-1.5 flex items-center justify-between text-xs text-gray-600">
@@ -192,7 +160,7 @@ const isCurrentPlacement = (option: PlacementOption) =>
         <button
           type="button"
           class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-700 hover:border-amber-300 hover:text-amber-600"
-          @click="selectedLayout(layoutStore.currentIndex)"
+          @click="selectedLayout(layoutStore.currentPlacementIndex)"
         >
           重設目前版型
         </button>
@@ -215,13 +183,13 @@ const isCurrentPlacement = (option: PlacementOption) =>
           >
             <div
               class="h-[84px] w-full overflow-hidden rounded-lg border border-gray-100 shadow-sm"
-              :class="{ 'ring-2 ring-amber-400': layoutStore.currentIndex === index }"
+              :class="{ 'ring-2 ring-amber-400': layoutStore.currentPlacementIndex === index }"
             >
               <img :src="defaultPic" class="h-full w-full object-cover object-center" alt="" />
             </div>
             <div
               class="mt-1 text-center text-xs group-hover:text-amber-600"
-              :class="{ 'text-amber-600': layoutStore.currentIndex === index }"
+              :class="{ 'text-amber-600': layoutStore.currentPlacementIndex === index }"
             >
               {{ layout.name }}
             </div>
@@ -243,7 +211,7 @@ const isCurrentPlacement = (option: PlacementOption) =>
           <button
             type="button"
             class="h-8 rounded-md border border-gray-200 bg-white px-2.5 text-xs text-gray-700"
-            @click="selectedLayout(layoutStore.currentIndex)"
+            @click="selectedLayout(layoutStore.currentPlacementIndex)"
           >
             重設
           </button>
@@ -254,7 +222,7 @@ const isCurrentPlacement = (option: PlacementOption) =>
             <div class="mb-3 text-xs font-semibold text-gray-700">資訊列位置</div>
             <div class="grid grid-cols-2 gap-2">
               <button
-                v-for="option in placementOptions"
+                v-for="option in layoutStore.layoutPlacements"
                 :key="option.name"
                 type="button"
                 class="h-9 rounded-md border bg-white px-2 text-xs text-gray-700"

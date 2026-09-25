@@ -55,10 +55,10 @@ const handleSelected = (name: EditorPanelName) => {
         v-for="menu in menus"
         :key="menu.name"
         type="button"
-        class="relative z-30 flex w-[121px] cursor-pointer items-center gap-2 border-0 bg-transparent px-3 py-1 text-left text-gray-700 hover:text-amber-500 max-lg:w-auto max-lg:min-w-18 max-lg:flex-1 max-lg:flex-col max-lg:justify-center max-lg:gap-[3px] max-lg:rounded-lg max-lg:px-1.5 max-lg:py-1 max-lg:text-center max-lg:text-xs"
+        class="relative z-30 flex w-[121px] cursor-pointer items-center gap-2 rounded-lg border-0 px-3 py-1 text-left hover:text-amber-500 max-lg:w-auto max-lg:min-w-18 max-lg:flex-1 max-lg:flex-col max-lg:justify-center max-lg:gap-[3px] max-lg:px-1.5 max-lg:py-1 max-lg:text-center max-lg:text-xs"
         :class="{
-          'text-amber-500': menu.name === editorStore.currentPanel,
-          'max-lg:bg-amber-50': menu.name === editorStore.currentPanel && isMobilePanelOpen,
+          'bg-amber-50 text-amber-500': menu.name === editorStore.currentPanel,
+          'bg-transparent text-gray-700': menu.name !== editorStore.currentPanel,
         }"
         @click="handleSelected(menu.name)"
       >

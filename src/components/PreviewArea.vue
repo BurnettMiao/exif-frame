@@ -27,6 +27,7 @@ const isPreviewAnimating = ref(false)
 const isPreviewPreparing = ref(false)
 const isUploadingPhoto = ref(false)
 let previewAnimationTimer: number | null = null
+let deferredStackPreviewTimer: number | null = null
 let uploadToken = 0
 const imageCache = new Map<string, Promise<HTMLImageElement>>()
 const logoCache = new Map<string, Promise<HTMLImageElement | null>>()
@@ -231,7 +232,15 @@ const renderPreviewItem = (item: PreviewItem): Promise<RenderedPreview> => {
 }
 
 const getRenderedPreviewUrl = (item: PreviewItem) => {
-  return renderedPreviewUrls.get(getPreviewRenderKey(item)) ?? item.url
+  const cacheKey = getPreviewRenderKey(item)
+  const cachedUrl = renderedPreviewUrls.get(cacheKey)
+  if (cachedUrl) return cachedUrl
+
+  const previousRenderedUrl = [...renderedPreviewUrls.entries()]
+    .reverse()
+    .find(([key]) => key.startsWith(`${item.id}|`))?.[1]
+
+  return previousRenderedUrl ?? item.url
 }
 
 const prepareRenderedPreviewUrl = (item: PreviewItem): Promise<string> => {
@@ -257,11 +266,14 @@ const prepareRenderedPreviewUrl = (item: PreviewItem): Promise<string> => {
   return urlPromise
 }
 
-const clearRenderedPreviewCaches = () => {
+const clearRenderedPreviewCaches = (options: { keepRenderedUrls?: boolean } = {}) => {
   renderedPreviewCache.clear()
   renderedPreviewUrlCache.clear()
-  renderedPreviewUrls.clear()
   renderedPreviewSizes.clear()
+
+  if (!options.keepRenderedUrls) {
+    renderedPreviewUrls.clear()
+  }
 }
 
 const copyRenderedPreviewToCanvas = (renderedPreview: RenderedPreview) => {
@@ -293,6 +305,25 @@ const preloadPreviewAssets = (item: PreviewItem | undefined) => {
 
 const preloadUpcomingPreviewAssets = () => {
   stackedPreviewItems.value.forEach(({ item }) => preloadPreviewAssets(item))
+}
+
+const refreshPreview = (options: { deferStack?: boolean } = {}) => {
+  clearRenderedPreviewCaches({ keepRenderedUrls: options.deferStack })
+  render()
+
+  if (!options.deferStack) {
+    preloadUpcomingPreviewAssets()
+    return
+  }
+
+  if (deferredStackPreviewTimer !== null) {
+    window.clearTimeout(deferredStackPreviewTimer)
+  }
+
+  deferredStackPreviewTimer = window.setTimeout(() => {
+    deferredStackPreviewTimer = null
+    preloadUpcomingPreviewAssets()
+  }, 220)
 }
 
 const getStackedPreviewItemsFromIndex = (startIndex: number) => {
@@ -515,15 +546,16 @@ onBeforeUnmount(() => {
   if (previewAnimationTimer !== null) {
     window.clearTimeout(previewAnimationTimer)
   }
+  if (deferredStackPreviewTimer !== null) {
+    window.clearTimeout(deferredStackPreviewTimer)
+  }
 })
 
 watch(
   () => filterStore.currentFilter,
   (newFilter) => {
     currentFilter.value = newFilter
-    clearRenderedPreviewCaches()
-    render()
-    preloadUpcomingPreviewAssets()
+    refreshPreview()
   },
   { immediate: true },
 )
@@ -542,9 +574,7 @@ watch(
 watch(
   () => layoutStore.currentLayout,
   () => {
-    clearRenderedPreviewCaches()
-    render()
-    preloadUpcomingPreviewAssets()
+    refreshPreview({ deferStack: true })
   },
 )
 </script>

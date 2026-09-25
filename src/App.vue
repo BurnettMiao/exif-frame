@@ -10,7 +10,7 @@ const handleExport = () => {
 </script>
 
 <template>
-  <div class="flex h-screen flex-col overflow-hidden">
+  <div class="flex h-[100dvh] flex-col overflow-hidden">
     <!-- Navbar -->
     <header class="w-full border-b border-b-gray-200">
       <div

@@ -1,6 +1,19 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { FrameLayout } from '@/types/layout'
+
+export type LayoutPlacement = {
+  name: string
+  infoPosition: FrameLayout['infoPosition']
+  logoPosition: FrameLayout['logoPosition']
+}
+
+export const layoutPlacements: LayoutPlacement[] = [
+  { name: '左 Logo', infoPosition: 'right', logoPosition: 'left' },
+  { name: '右 Logo', infoPosition: 'left', logoPosition: 'right' },
+  { name: '置中橫排', infoPosition: 'center-right', logoPosition: 'center-left' },
+  { name: '置中上下', infoPosition: 'center-bottom', logoPosition: 'center-top' },
+]
 
 const cloneLayout = (layout: FrameLayout): FrameLayout => ({
   ...layout,
@@ -22,43 +35,30 @@ const createLayout = (
 
 // layout 管理狀態
 export const useLayoutStore = defineStore('layout', () => {
-  const layouts = ref<FrameLayout[]>([
-    createLayout({
-      name: 'logo左 info右',
-      padding: { top: 0.05, right: 0.05, bottom: 0.05, left: 0.05 },
-      gapRatio: 0.05,
-      infoPosition: 'right',
-      logoPosition: 'left',
-      logoScale: 0.18,
-    }),
-    createLayout({
-      name: 'logo右 info左',
-      padding: { top: 0.05, right: 0.05, bottom: 0.05, left: 0.05 },
-      gapRatio: 0.05,
-      infoPosition: 'left',
-      logoPosition: 'right',
-      logoScale: 0.18,
-    }),
-    createLayout({
-      name: 'logo中 info中',
-      padding: { top: 0.05, right: 0.05, bottom: 0.05, left: 0.05 },
-      gapRatio: 0.05,
-      infoPosition: 'center-right',
-      logoPosition: 'center-left',
-      logoScale: 0.18,
-    }),
-    createLayout({
-      name: 'logo上 info下',
-      padding: { top: 0.05, right: 0.05, bottom: 0.05, left: 0.05 },
-      gapRatio: 0.05,
-      infoPosition: 'center-bottom',
-      logoPosition: 'center-top',
-      logoScale: 0.18,
-    }),
-  ])
+  const layouts = ref<FrameLayout[]>(
+    layoutPlacements.map((placement) =>
+      createLayout({
+        name: placement.name,
+        padding: { top: 0.05, right: 0.05, bottom: 0.05, left: 0.05 },
+        gapRatio: 0.05,
+        infoPosition: placement.infoPosition,
+        logoPosition: placement.logoPosition,
+        logoScale: 0.18,
+      }),
+    ),
+  )
 
   const currentIndex = ref(0)
   const currentLayout = ref<FrameLayout>(cloneLayout(layouts.value[0]!))
+  const currentPlacementIndex = computed(() => {
+    const index = layoutPlacements.findIndex(
+      (placement) =>
+        placement.infoPosition === currentLayout.value.infoPosition &&
+        placement.logoPosition === currentLayout.value.logoPosition,
+    )
+
+    return index === -1 ? currentIndex.value : index
+  })
 
   function selectedLayout(index: number) {
     const selectedPreset = layouts.value[index]
@@ -116,12 +116,22 @@ export const useLayoutStore = defineStore('layout', () => {
     infoPosition: FrameLayout['infoPosition'],
     logoPosition: FrameLayout['logoPosition'],
   ) {
+    const placementIndex = layoutPlacements.findIndex(
+      (placement) =>
+        placement.infoPosition === infoPosition && placement.logoPosition === logoPosition,
+    )
+    if (placementIndex !== -1) {
+      currentIndex.value = placementIndex
+    }
+
     updateLayout({ infoPosition, logoPosition })
   }
 
   return {
     layouts,
+    layoutPlacements,
     currentIndex,
+    currentPlacementIndex,
     currentLayout,
     selectedLayout,
     updatePadding,
