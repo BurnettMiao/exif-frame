@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import FilterArea from '@/components/FilterArea.vue'
 import LayoutArea from '@/components/LayoutArea.vue'
 import InfoArea from '@/components/InfoArea.vue'
@@ -32,6 +32,11 @@ const menus = ref<Menu[]>([
 ])
 
 const isMobilePanelOpen = ref(false)
+const mobilePanelClass = computed(() => {
+  if (!isMobilePanelOpen.value) return 'max-lg:hidden'
+  if (editorStore.currentPanel === '濾鏡區') return 'max-lg:h-[150px]'
+  return 'max-lg:h-[190px]'
+})
 
 const handleSelected = (name: EditorPanelName) => {
   if (editorStore.currentPanel === name) {
@@ -76,7 +81,7 @@ const handleSelected = (name: EditorPanelName) => {
 
     <div
       class="absolute top-0 left-[65px] h-full max-lg:relative max-lg:z-20 max-lg:left-0 max-lg:w-full max-lg:min-h-0 max-lg:overflow-hidden"
-      :class="isMobilePanelOpen ? 'max-lg:h-[190px]' : 'max-lg:hidden'"
+      :class="mobilePanelClass"
     >
       <LayoutArea v-if="editorStore.currentPanel === '排版區'" />
       <InfoArea v-if="editorStore.currentPanel === '資訊區'" />
