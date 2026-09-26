@@ -26,7 +26,7 @@ const handleExport = () => {
         </RouterLink>
 
         <div class="flex items-center gap-2">
-          <!-- <RouterLink
+          <RouterLink
             to="/intro"
             class="hidden min-h-10 items-center rounded-lg px-3 py-1 text-sm text-gray-600 hover:text-amber-600 sm:flex"
             active-class="text-amber-600"
@@ -39,7 +39,7 @@ const handleExport = () => {
             active-class="text-amber-600"
           >
             編輯器
-          </RouterLink> -->
+          </RouterLink>
 
           <button
             v-if="isEditorRoute"
