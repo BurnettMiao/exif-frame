@@ -43,6 +43,31 @@ const workflowSteps = [
   },
 ]
 
+const privacyPoints = ['No uploads', 'No accounts required', 'No server-side image processing']
+
+const featureHighlights = [
+  {
+    icon: 'ri-file-info-line',
+    title: 'EXIF metadata frames',
+    description: '把相機、鏡頭、快門、光圈與 ISO 整合進照片版面。',
+  },
+  {
+    icon: 'ri-camera-3-line',
+    title: 'Camera brand logo support',
+    description: '依照片品牌顯示對應 Logo，讓輸出更有完整感。',
+  },
+  {
+    icon: 'ri-layout-4-line',
+    title: 'Layout and color control',
+    description: '調整邊距、資訊位置、背景與文字顏色。',
+  },
+  {
+    icon: 'ri-contrast-drop-2-line',
+    title: 'Film filters and grain',
+    description: '加入濾鏡與噪點，做出更接近底片的復古質感。',
+  },
+]
+
 const stackStyles = [
   {
     transform: 'translate(0, 0) scale(1) rotate(-1.5deg)',
@@ -190,6 +215,100 @@ onBeforeUnmount(() => {
               </div>
             </div>
           </template>
+        </div>
+      </section>
+
+      <section class="w-full py-8 sm:py-12 lg:py-16">
+        <div
+          class="grid items-center gap-8 rounded-lg border border-gray-100 bg-gray-50 px-5 py-6 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-8"
+        >
+          <div>
+            <p class="mb-3 text-sm font-semibold tracking-wide text-amber-600 uppercase">
+              Local Processing
+            </p>
+            <h2 class="text-2xl font-bold text-gray-950 sm:text-3xl">
+              Your photos stay on your device.
+            </h2>
+            <p class="mt-4 max-w-2xl text-sm leading-6 text-gray-600 sm:text-base">
+              Exif Frame keeps image processing inside your browser, so you can frame and export
+              photos without sending them away.
+            </p>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            <div
+              v-for="point in privacyPoints"
+              :key="point"
+              class="flex min-h-16 items-center gap-3 rounded-lg bg-white px-4 py-3 text-sm font-semibold text-gray-800 ring-1 ring-gray-100"
+            >
+              <span
+                class="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600"
+              >
+                <i class="ri-check-line text-lg" aria-hidden="true"></i>
+              </span>
+              <span>{{ point }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="w-full py-8 sm:py-12 lg:py-16">
+        <div class="mb-8 flex flex-col gap-2 sm:mb-10">
+          <p class="text-sm font-semibold tracking-wide text-amber-600 uppercase">Features</p>
+          <h2 class="text-2xl font-bold text-gray-950 sm:text-3xl">為攝影輸出準備的細節</h2>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div
+            v-for="feature in featureHighlights"
+            :key="feature.title"
+            class="flex min-h-48 flex-col rounded-lg border border-gray-100 bg-white p-5 shadow-sm"
+          >
+            <div
+              class="mb-5 flex size-12 items-center justify-center rounded-full bg-gray-900 text-2xl text-white"
+            >
+              <i :class="feature.icon" aria-hidden="true"></i>
+            </div>
+            <h3 class="text-base font-semibold text-gray-950">{{ feature.title }}</h3>
+            <p class="mt-3 text-sm leading-6 text-gray-600">{{ feature.description }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="w-full py-8 sm:py-12 lg:py-16">
+        <div
+          class="grid items-center gap-8 rounded-lg bg-gray-900 px-5 py-7 text-white sm:px-6 lg:grid-cols-[0.85fr_1.15fr] lg:px-8 lg:py-9"
+        >
+          <div
+            class="flex size-16 items-center justify-center rounded-full bg-white/10 text-3xl text-amber-300 ring-1 ring-white/10"
+          >
+            <i class="ri-folder-zip-line" aria-hidden="true"></i>
+          </div>
+
+          <div>
+            <p class="mb-3 text-sm font-semibold tracking-wide text-amber-300 uppercase">
+              Batch Export
+            </p>
+            <h2 class="text-2xl font-bold sm:text-3xl">Export a whole set at once.</h2>
+            <p class="mt-4 max-w-3xl text-sm leading-6 text-gray-300 sm:text-base">
+              一次處理多張照片，套用同一組版面、資訊顯示、濾鏡與噪點，最後打包成 ZIP
+              匯出，適合旅拍、活動紀錄或一整組作品整理。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="w-full pt-8 pb-14 text-center sm:pt-12 sm:pb-18 lg:pt-16">
+        <p class="text-sm font-semibold tracking-wide text-amber-600 uppercase">Start Now</p>
+        <h2 class="mt-3 text-3xl font-bold text-gray-950 sm:text-4xl">Ready to frame your shot?</h2>
+        <div class="mt-7 flex justify-center">
+          <RouterLink
+            to="/editor"
+            class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-500"
+          >
+            <i class="ri-arrow-right-line text-lg" aria-hidden="true"></i>
+            開始編輯
+          </RouterLink>
         </div>
       </section>
     </main>
