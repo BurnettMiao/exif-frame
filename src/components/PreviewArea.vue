@@ -27,6 +27,7 @@ const previewViewportSize = ref({ width: 0, height: 0 })
 const isPreviewAnimating = ref(false)
 const isPreviewPreparing = ref(false)
 const isUploadingPhoto = ref(false)
+const isExportingAll = ref(false)
 let previewAnimationTimer: number | null = null
 let deferredStackPreviewTimer: number | null = null
 let uploadToken = 0
@@ -48,6 +49,160 @@ interface StackedPreviewEntry {
   itemIndex: number
   stackIndex: number
   isIncoming?: boolean
+}
+
+interface ZipEntry {
+  name: string
+  data: Uint8Array
+}
+
+const textEncoder = new TextEncoder()
+let crcTable: Uint32Array | null = null
+
+const getCrcTable = () => {
+  if (crcTable) return crcTable
+
+  const table = new Uint32Array(256)
+  for (let index = 0; index < table.length; index += 1) {
+    let value = index
+    for (let bit = 0; bit < 8; bit += 1) {
+      value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1
+    }
+    table[index] = value >>> 0
+  }
+
+  crcTable = table
+  return table
+}
+
+const getCrc32 = (data: Uint8Array) => {
+  const table = getCrcTable()
+  let crc = 0xffffffff
+
+  for (const byte of data) {
+    crc = table[(crc ^ byte) & 0xff]! ^ (crc >>> 8)
+  }
+
+  return (crc ^ 0xffffffff) >>> 0
+}
+
+const writeUint16 = (target: Uint8Array, offset: number, value: number) => {
+  target[offset] = value & 0xff
+  target[offset + 1] = (value >>> 8) & 0xff
+}
+
+const writeUint32 = (target: Uint8Array, offset: number, value: number) => {
+  target[offset] = value & 0xff
+  target[offset + 1] = (value >>> 8) & 0xff
+  target[offset + 2] = (value >>> 16) & 0xff
+  target[offset + 3] = (value >>> 24) & 0xff
+}
+
+const toArrayBuffer = (data: Uint8Array) => {
+  const copy = new Uint8Array(data.byteLength)
+  copy.set(data)
+  return copy.buffer
+}
+
+const createZipBlob = (entries: ZipEntry[]) => {
+  const localParts: Uint8Array[] = []
+  const centralParts: Uint8Array[] = []
+  let offset = 0
+
+  entries.forEach((entry) => {
+    const filename = textEncoder.encode(entry.name)
+    const crc = getCrc32(entry.data)
+    const localHeader = new Uint8Array(30 + filename.length)
+    const centralHeader = new Uint8Array(46 + filename.length)
+
+    writeUint32(localHeader, 0, 0x04034b50)
+    writeUint16(localHeader, 4, 20)
+    writeUint16(localHeader, 6, 0)
+    writeUint16(localHeader, 8, 0)
+    writeUint16(localHeader, 10, 0)
+    writeUint16(localHeader, 12, 0)
+    writeUint32(localHeader, 14, crc)
+    writeUint32(localHeader, 18, entry.data.length)
+    writeUint32(localHeader, 22, entry.data.length)
+    writeUint16(localHeader, 26, filename.length)
+    writeUint16(localHeader, 28, 0)
+    localHeader.set(filename, 30)
+
+    writeUint32(centralHeader, 0, 0x02014b50)
+    writeUint16(centralHeader, 4, 20)
+    writeUint16(centralHeader, 6, 20)
+    writeUint16(centralHeader, 8, 0)
+    writeUint16(centralHeader, 10, 0)
+    writeUint16(centralHeader, 12, 0)
+    writeUint16(centralHeader, 14, 0)
+    writeUint32(centralHeader, 16, crc)
+    writeUint32(centralHeader, 20, entry.data.length)
+    writeUint32(centralHeader, 24, entry.data.length)
+    writeUint16(centralHeader, 28, filename.length)
+    writeUint16(centralHeader, 30, 0)
+    writeUint16(centralHeader, 32, 0)
+    writeUint16(centralHeader, 34, 0)
+    writeUint16(centralHeader, 36, 0)
+    writeUint32(centralHeader, 38, 0)
+    writeUint32(centralHeader, 42, offset)
+    centralHeader.set(filename, 46)
+
+    localParts.push(localHeader, entry.data)
+    centralParts.push(centralHeader)
+    offset += localHeader.length + entry.data.length
+  })
+
+  const centralDirectorySize = centralParts.reduce((total, part) => total + part.length, 0)
+  const endRecord = new Uint8Array(22)
+  writeUint32(endRecord, 0, 0x06054b50)
+  writeUint16(endRecord, 4, 0)
+  writeUint16(endRecord, 6, 0)
+  writeUint16(endRecord, 8, entries.length)
+  writeUint16(endRecord, 10, entries.length)
+  writeUint32(endRecord, 12, centralDirectorySize)
+  writeUint32(endRecord, 16, offset)
+  writeUint16(endRecord, 20, 0)
+
+  return new Blob([...localParts, ...centralParts, endRecord].map(toArrayBuffer), {
+    type: 'application/zip',
+  })
+}
+
+const downloadBlob = (blob: Blob, filename: string) => {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.download = filename
+  link.href = url
+  link.style.display = 'none'
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000)
+}
+
+const canvasToJpegBytes = (sourceCanvas: HTMLCanvasElement) =>
+  new Promise<Uint8Array>((resolve, reject) => {
+    sourceCanvas.toBlob(
+      async (blob) => {
+        if (!blob) {
+          reject(new Error('圖片匯出失敗'))
+          return
+        }
+
+        resolve(new Uint8Array(await blob.arrayBuffer()))
+      },
+      'image/jpeg',
+      0.95,
+    )
+  })
+
+const setExportingAll = (isExporting: boolean) => {
+  isExportingAll.value = isExporting
+  window.dispatchEvent(
+    new CustomEvent('exif-frame:export-all-state', {
+      detail: { isExporting },
+    }),
+  )
 }
 
 const setCanvasRef = (element: unknown) => {
@@ -527,16 +682,57 @@ const handleFileUpload = async (event: Event) => {
 // 匯出：直接存畫面上的 canvas，不用再另外組合
 const downloadImage = () => {
   if (!canvas.value) return
-  const link = document.createElement('a')
-  link.download = 'edited-photo.jpg'
-  link.href = canvas.value.toDataURL('image/jpeg', 0.95)
-  link.click()
+  canvas.value.toBlob(
+    (blob) => {
+      if (!blob) return
+      downloadBlob(blob, 'edited-photo.jpg')
+    },
+    'image/jpeg',
+    0.95,
+  )
+}
+
+const downloadAllImages = async () => {
+  if (previewItems.value.length === 0 || isExportingAll.value) return
+
+  setExportingAll(true)
+
+  try {
+    const entries = await Promise.all(
+      previewItems.value.map(async (item, index) => {
+        await item.ready
+        const latestItem =
+          previewItems.value.find((previewItem) => previewItem.id === item.id) ?? item
+        const renderedPreview = await renderPreviewItem(latestItem)
+        const data = await canvasToJpegBytes(renderedPreview.canvas)
+        const fileNumber = String(index + 1).padStart(2, '0')
+
+        return {
+          name: `edited-photo-${fileNumber}.jpg`,
+          data,
+        }
+      }),
+    )
+
+    downloadBlob(createZipBlob(entries), 'exif-frame-export.zip')
+  } catch (error) {
+    console.error('批次匯出失敗', error)
+    window.alert('批次匯出失敗，請再試一次。')
+  } finally {
+    setExportingAll(false)
+  }
+}
+
+const handleExportAllRequest = () => {
+  void downloadAllImages()
 }
 
 let previewResizeObserver: ResizeObserver | null = null
 
 // 預先載入測試圖片
 onMounted(() => {
+  window.addEventListener('exif-frame:export-all', handleExportAllRequest)
+
   if (previewStack.value) {
     previewResizeObserver = new ResizeObserver(updatePreviewFrameSize)
     previewResizeObserver.observe(previewStack.value)
@@ -546,6 +742,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('exif-frame:export-all', handleExportAllRequest)
+  setExportingAll(false)
   previewResizeObserver?.disconnect()
   if (previewAnimationTimer !== null) {
     window.clearTimeout(previewAnimationTimer)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import { useRoute } from 'vue-router'
 import { useFilterStore } from '@/stores/filterStore'
@@ -7,10 +7,29 @@ import { useFilterStore } from '@/stores/filterStore'
 const filterStore = useFilterStore()
 const route = useRoute()
 const isEditorRoute = computed(() => route.name === 'editor')
+const isExportingAll = ref(false)
 
 const handleExport = () => {
   filterStore.download()
 }
+
+const handleExportAll = () => {
+  if (isExportingAll.value) return
+  window.dispatchEvent(new CustomEvent('exif-frame:export-all'))
+}
+
+const handleExportAllState = (event: Event) => {
+  const customEvent = event as CustomEvent<{ isExporting: boolean }>
+  isExportingAll.value = customEvent.detail?.isExporting ?? false
+}
+
+onMounted(() => {
+  window.addEventListener('exif-frame:export-all-state', handleExportAllState)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('exif-frame:export-all-state', handleExportAllState)
+})
 </script>
 
 <template>
@@ -48,6 +67,20 @@ const handleExport = () => {
           >
             <i class="ri-export-line text-xl"></i>
             <div class="text-sm sm:text-base">匯出圖片</div>
+          </button>
+          <button
+            v-if="isEditorRoute"
+            @click="handleExportAll"
+            :disabled="isExportingAll"
+            class="flex min-h-10 items-center px-3 py-1 rounded-lg bg-gray-800 text-white gap-x-2 border border-gray-800 cursor-pointer hover:bg-amber-500 hover:border-amber-500 disabled:cursor-wait disabled:opacity-60 transition-all ease duration-300"
+          >
+            <i
+              :class="isExportingAll ? 'ri-loader-4-line animate-spin' : 'ri-folder-zip-line'"
+              class="text-xl"
+            ></i>
+            <div class="text-sm sm:text-base">
+              {{ isExportingAll ? '匯出中' : '匯出全部' }}
+            </div>
           </button>
         </div>
       </div>
