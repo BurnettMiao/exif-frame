@@ -21,6 +21,7 @@ const canvas = ref<HTMLCanvasElement | null>(null)
 const currentImage = ref<HTMLImageElement | null>(null)
 const logoImage = ref<HTMLImageElement | null>(null)
 const currentFilter = ref<string>('none')
+const currentGrainAmount = ref(0)
 const previewFrameSize = ref({ width: 0, height: 0 })
 const previewViewportSize = ref({ width: 0, height: 0 })
 const isPreviewAnimating = ref(false)
@@ -197,6 +198,7 @@ const getPreviewRenderKey = (item: PreviewItem) =>
     JSON.stringify(item.infoVisibility),
     JSON.stringify(layoutStore.currentLayout),
     currentFilter.value,
+    currentGrainAmount.value,
   ].join('|')
 
 const renderPreviewItem = (item: PreviewItem): Promise<RenderedPreview> => {
@@ -217,6 +219,7 @@ const renderPreviewItem = (item: PreviewItem): Promise<RenderedPreview> => {
       infoVisibility: item.infoVisibility,
       logo,
       filter: currentFilter.value,
+      grainAmount: currentGrainAmount.value,
     })
 
     renderedPreviewSizes.set(cacheKey, {
@@ -440,6 +443,7 @@ const render = () => {
     infoVisibility: activeItem.value?.infoVisibility ?? null,
     logo: logoImage.value,
     filter: currentFilter.value,
+    grainAmount: currentGrainAmount.value,
   })
   updatePreviewFrameSize()
 }
@@ -556,6 +560,15 @@ watch(
   (newFilter) => {
     currentFilter.value = newFilter
     refreshPreview()
+  },
+  { immediate: true },
+)
+
+watch(
+  () => filterStore.grainAmount,
+  (newGrainAmount) => {
+    currentGrainAmount.value = newGrainAmount
+    refreshPreview({ deferStack: true })
   },
   { immediate: true },
 )

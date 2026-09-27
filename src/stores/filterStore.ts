@@ -6,6 +6,7 @@ export const useFilterStore = defineStore('filter', () => {
   // 狀態
   const currentFilter = ref<string>('none')
   const currentPreviewUrl = ref<string>('')
+  const grainAmount = ref<number>(0)
 
   // 用來觸發下載
   const triggerDownload = ref(0) // 每次+1就觸發一次下載
@@ -19,8 +20,13 @@ export const useFilterStore = defineStore('filter', () => {
     currentPreviewUrl.value = url
   }
 
+  const setGrainAmount = (amount: number) => {
+    grainAmount.value = Math.min(100, Math.max(0, amount))
+  }
+
   const resetFilter = () => {
     currentFilter.value = 'none'
+    grainAmount.value = 0
   }
 
   const download = () => {
@@ -30,8 +36,10 @@ export const useFilterStore = defineStore('filter', () => {
   return {
     currentFilter,
     currentPreviewUrl,
+    grainAmount,
     setFilter,
     setPreviewUrl,
+    setGrainAmount,
     resetFilter,
     triggerDownload,
     download,

@@ -16,6 +16,7 @@ export interface RenderFrameParams {
   infoVisibility: PhotoInfoVisibility | null
   logo: HTMLImageElement | null
   filter: string
+  grainAmount?: number
 }
 
 let canvasFilterSupported: boolean | null = null
@@ -181,6 +182,51 @@ const applyManualFilter = (
   ctx.putImageData(imageData, x, y)
 }
 
+const applyGrain = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  amount: number,
+) => {
+  if (amount <= 0) return
+
+  const normalizedAmount = Math.min(100, Math.max(0, amount)) / 100
+  const base = Math.max(width, height)
+  const grainScale = Math.max(2, Math.round(base / (1200 - normalizedAmount * 420)))
+  const grainWidth = Math.ceil(width / grainScale)
+  const grainHeight = Math.ceil(height / grainScale)
+  const grainCanvas = document.createElement('canvas')
+  const grainCtx = grainCanvas.getContext('2d')
+  if (!grainCtx) return
+
+  grainCanvas.width = grainWidth
+  grainCanvas.height = grainHeight
+
+  const imageData = grainCtx.createImageData(grainWidth, grainHeight)
+  const { data } = imageData
+  const alpha = Math.round(24 + normalizedAmount * 74)
+
+  for (let index = 0; index < data.length; index += 4) {
+    const value = Math.random() > 0.5 ? 255 : 0
+
+    data[index] = value
+    data[index + 1] = value
+    data[index + 2] = value
+    data[index + 3] = alpha
+  }
+
+  grainCtx.putImageData(imageData, 0, 0)
+
+  ctx.save()
+  ctx.globalCompositeOperation = 'overlay'
+  ctx.globalAlpha = 0.22 + normalizedAmount * 0.38
+  ctx.imageSmoothingEnabled = false
+  ctx.drawImage(grainCanvas, x, y, width, height)
+  ctx.restore()
+}
+
 const getVisibleText = (value: unknown) => {
   if (value == null) return ''
   return String(value).trim()
@@ -273,6 +319,7 @@ export function renderFrame({
   infoVisibility,
   logo,
   filter,
+  grainAmount = 0,
 }: RenderFrameParams): void {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
@@ -369,6 +416,7 @@ export function renderFrame({
   if (!supportsCanvasFilter()) {
     applyManualFilter(ctx, padLeft, padTop, image.width, image.height, filter)
   }
+  applyGrain(ctx, padLeft, padTop, image.width, image.height, grainAmount)
 
   let centeredGroupLogoX: number | null = null
   let centeredGroupInfoX: number | null = null

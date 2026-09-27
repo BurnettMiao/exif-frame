@@ -34,7 +34,7 @@ const menus = ref<Menu[]>([
 const isMobilePanelOpen = ref(false)
 const mobilePanelClass = computed(() => {
   if (!isMobilePanelOpen.value) return 'max-lg:hidden'
-  if (editorStore.currentPanel === '濾鏡區') return 'max-lg:h-[150px]'
+  if (editorStore.currentPanel === '濾鏡區') return 'max-lg:h-auto pb-2'
   return 'max-lg:h-[190px]'
 })
 

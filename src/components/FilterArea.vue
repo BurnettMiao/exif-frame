@@ -39,14 +39,19 @@ const selectedFilter = (index: number) => {
     filterStore.setFilter(filter.details)
   }
 }
+
+const updateGrainAmount = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  filterStore.setGrainAmount(Number(target.value))
+}
 </script>
 
 <template>
   <div
-    class="flex h-full w-full min-w-45 flex-col overflow-hidden border-r border-r-gray-200 bg-white px-4 py-6 2xl:max-w-60 max-lg:h-auto max-lg:max-h-[190px] max-lg:min-w-0 max-lg:max-w-none max-lg:border-r-0 max-lg:px-3.5 max-lg:py-3"
+    class="flex h-full w-full min-w-45 flex-col overflow-hidden border-r border-r-gray-200 bg-white px-4 py-6 2xl:max-w-60 max-lg:h-full max-lg:max-h-none max-lg:min-w-0 max-lg:max-w-none max-lg:border-r-0 max-lg:px-3.5 max-lg:pt-3 max-lg:pb-0"
   >
     <div
-      class="flex flex-1 flex-col gap-y-4 overflow-y-scroll max-lg:flex-row max-lg:gap-3 max-lg:overflow-x-auto max-lg:overflow-y-hidden max-lg:pb-1.5"
+      class="flex min-h-0 flex-1 flex-col gap-y-4 overflow-y-scroll max-lg:h-[114px] max-lg:flex-none max-lg:flex-row max-lg:gap-3 max-lg:overflow-x-auto max-lg:overflow-y-hidden max-lg:pb-1.5"
     >
       <button
         v-for="(filter, index) in filterDetails"
@@ -72,6 +77,24 @@ const selectedFilter = (index: number) => {
           {{ filter.name }}
         </div>
       </button>
+    </div>
+    <div
+      class="mt-5 shrink-0 rounded-lg border border-gray-100 bg-gray-50 px-3 py-3 max-lg:mt-3 max-lg:mb-0"
+    >
+      <div class="mb-2 flex items-center justify-between gap-3 text-sm">
+        <span class="font-medium text-gray-700">噪點</span>
+        <span class="min-w-10 text-right text-gray-500">{{ filterStore.grainAmount }}</span>
+      </div>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        :value="filterStore.grainAmount"
+        class="w-full accent-amber-500"
+        aria-label="噪點強度"
+        @input="updateGrainAmount"
+      />
     </div>
   </div>
 </template>
