@@ -20,6 +20,29 @@ const introImages = [
   },
 ]
 
+const workflowSteps = [
+  {
+    icon: 'ri-upload-cloud-2-line',
+    title: 'Upload',
+    description: '上傳照片',
+  },
+  {
+    icon: 'ri-camera-lens-line',
+    title: 'Read EXIF',
+    description: '自動讀取相機、鏡頭、快門、光圈、ISO',
+  },
+  {
+    icon: 'ri-equalizer-3-line',
+    title: 'Customize',
+    description: '調整版型、Logo、資訊顯示、濾鏡與噪點',
+  },
+  {
+    icon: 'ri-folder-zip-line',
+    title: 'Export',
+    description: '匯出單張或批次 ZIP',
+  },
+]
+
 const stackStyles = [
   {
     transform: 'translate(0, 0) scale(1) rotate(-1.5deg)',
@@ -91,7 +114,9 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="h-full w-full overflow-y-auto bg-white">
-    <main class="mx-auto flex min-h-full w-full max-w-384 items-center px-5 py-12 sm:px-6 lg:px-8">
+    <main
+      class="mx-auto flex min-h-full w-full max-w-384 flex-col justify-center px-5 py-12 sm:px-6 lg:px-8"
+    >
       <section class="grid w-full items-center gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:gap-16">
         <div class="order-2 max-w-2xl lg:order-1">
           <p class="mb-4 text-sm font-semibold tracking-wide text-amber-600 uppercase">
@@ -135,6 +160,36 @@ onBeforeUnmount(() => {
             :class="{ 'is-active': image.isActive }"
             :style="image.style"
           />
+        </div>
+      </section>
+
+      <section class="w-full pt-8 pb-4 sm:pt-12 lg:pt-16">
+        <div class="mb-8 flex flex-col gap-2 sm:mb-10">
+          <p class="text-sm font-semibold tracking-wide text-amber-600 uppercase">How it works</p>
+          <h2 class="text-2xl font-bold text-gray-950 sm:text-3xl">從上傳到匯出，只需要幾步</h2>
+        </div>
+
+        <div class="grid gap-x-10 gap-y-10 sm:grid-cols-2 xl:grid-cols-4">
+          <template v-for="(step, index) in workflowSteps" :key="step.title">
+            <div
+              class="relative flex min-h-24 items-center gap-4 overflow-hidden rounded-lg border border-gray-100 bg-white p-4 pr-10 shadow-sm"
+            >
+              <div
+                class="absolute top-0 right-0 flex size-12 items-start justify-end rounded-bl-full bg-gray-900 pt-2 pr-2 text-sm font-semibold text-white"
+              >
+                {{ index + 1 }}
+              </div>
+              <div
+                class="flex size-13 shrink-0 items-center justify-center rounded-full bg-amber-50 text-2xl text-amber-600 ring-1 ring-amber-100"
+              >
+                <i :class="step.icon" aria-hidden="true"></i>
+              </div>
+              <div class="min-w-0">
+                <h3 class="text-base font-semibold text-gray-950">{{ step.title }}</h3>
+                <p class="mt-1 text-sm leading-6 text-gray-600">{{ step.description }}</p>
+              </div>
+            </div>
+          </template>
         </div>
       </section>
     </main>
