@@ -23,47 +23,68 @@ const introImages = [
 const workflowSteps = [
   {
     icon: 'ri-upload-cloud-2-line',
-    title: 'Upload',
-    description: '上傳照片',
+    title: '上傳照片',
+    subtitle: 'Upload',
+    description: '選擇一張或多張照片開始製作。',
   },
   {
     icon: 'ri-camera-lens-line',
-    title: 'Read EXIF',
+    title: '讀取 EXIF',
+    subtitle: 'Read EXIF',
     description: '自動讀取相機、鏡頭、快門、光圈、ISO',
   },
   {
     icon: 'ri-equalizer-3-line',
-    title: 'Customize',
+    title: '自訂樣式',
+    subtitle: 'Customize',
     description: '調整版型、Logo、資訊顯示、濾鏡與噪點',
   },
   {
     icon: 'ri-folder-zip-line',
-    title: 'Export',
+    title: '匯出成品',
+    subtitle: 'Export',
     description: '匯出單張或批次 ZIP',
   },
 ]
 
-const privacyPoints = ['No uploads', 'No accounts required', 'No server-side image processing']
+const privacyPoints = [
+  {
+    title: '不會上傳照片',
+    subtitle: 'No uploads',
+  },
+  {
+    title: '不需要登入帳號',
+    subtitle: 'No accounts required',
+  },
+  {
+    title: '沒有伺服器端圖片處理',
+    subtitle: 'No server-side image processing',
+  },
+]
 
 const featureHighlights = [
   {
     icon: 'ri-file-info-line',
-    title: 'EXIF metadata frames',
+    title: 'EXIF 資訊相框',
+    subtitle: 'EXIF metadata frames',
     description: '把相機、鏡頭、快門、光圈與 ISO 整合進照片版面。',
   },
   {
     icon: 'ri-camera-3-line',
-    title: 'Camera brand logo support',
+    title: '相機品牌 Logo',
+    subtitle: 'Camera brand logo support',
     description: '依照片品牌顯示對應 Logo，讓輸出更有完整感。',
   },
   {
     icon: 'ri-layout-4-line',
-    title: 'Layout and color control',
+    title: '版面與色彩控制',
+    subtitle: 'Layout and color control',
     description: '調整邊距、資訊位置、背景與文字顏色。',
   },
   {
     icon: 'ri-contrast-drop-2-line',
-    title: 'Film filters and grain',
+    title: '底片感濾鏡與噪點',
+    subtitle: 'Film filters and grain',
     description: '加入濾鏡與噪點，做出更接近底片的復古質感。',
   },
 ]
@@ -142,12 +163,14 @@ onBeforeUnmount(() => {
     <main
       class="mx-auto flex min-h-full w-full max-w-384 flex-col justify-center px-5 py-12 sm:px-6 lg:px-8"
     >
-      <section class="grid w-full items-center gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:gap-16">
+      <section
+        class="grid w-full items-center gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-start lg:gap-16"
+      >
         <div class="order-2 max-w-2xl lg:order-1">
           <p class="mb-4 text-sm font-semibold tracking-wide text-amber-600 uppercase">
             Exif Frame
           </p>
-          <h1 class="text-4xl leading-tight font-bold text-gray-950 sm:text-5xl lg:text-6xl">
+          <h1 class="text-3xl leading-tight font-bold text-gray-950 sm:text-5xl lg:text-6xl">
             讓照片資訊成為畫面的一部分
           </h1>
           <p class="mt-6 text-base leading-8 text-gray-600 sm:text-lg">
@@ -181,7 +204,7 @@ onBeforeUnmount(() => {
             :key="image.src"
             :src="image.src"
             :alt="image.alt"
-            class="intro-stack-image absolute top-2 left-0 w-[82%] max-w-[520px] rounded-lg border border-gray-100 bg-white object-cover shadow-2xl"
+            class="intro-stack-image absolute top-0 left-0 w-[82%] max-w-[520px] rounded-lg border border-gray-100 bg-white object-cover shadow-2xl"
             :class="{ 'is-active': image.isActive }"
             :style="image.style"
           />
@@ -189,9 +212,14 @@ onBeforeUnmount(() => {
       </section>
 
       <section class="w-full pt-8 pb-4 sm:pt-12 lg:pt-16">
-        <div class="mb-8 flex flex-col gap-2 sm:mb-10">
-          <p class="text-sm font-semibold tracking-wide text-amber-600 uppercase">How it works</p>
+        <div class="mb-8 sm:mb-10">
+          <p class="mb-4 text-sm font-semibold tracking-wide text-amber-600 uppercase">
+            How it works
+          </p>
           <h2 class="text-2xl font-bold text-gray-950 sm:text-3xl">從上傳到匯出，只需要幾步</h2>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-gray-600 sm:text-base">
+            A simple local workflow for turning your photos into polished metadata frames.
+          </p>
         </div>
 
         <div class="grid gap-x-10 gap-y-10 sm:grid-cols-2 xl:grid-cols-4">
@@ -200,7 +228,7 @@ onBeforeUnmount(() => {
               class="relative flex min-h-24 items-center gap-4 overflow-hidden rounded-lg border border-gray-100 bg-white p-4 pr-10 shadow-sm"
             >
               <div
-                class="absolute top-0 right-0 flex size-12 items-start justify-end rounded-bl-full bg-gray-900 pt-2 pr-2 text-sm font-semibold text-white"
+                class="absolute top-0 right-0 flex size-12 items-start justify-end rounded-bl-full bg-gray-900 pt-2 pr-3 text-xl font-semibold text-white"
               >
                 {{ index + 1 }}
               </div>
@@ -210,8 +238,11 @@ onBeforeUnmount(() => {
                 <i :class="step.icon" aria-hidden="true"></i>
               </div>
               <div class="min-w-0">
-                <h3 class="text-base font-semibold text-gray-950">{{ step.title }}</h3>
-                <p class="mt-1 text-sm leading-6 text-gray-600">{{ step.description }}</p>
+                <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                  <h3 class="text-xl font-bold text-gray-950">{{ step.title }}</h3>
+                  <p class="text-sm font-semibold text-gray-950">{{ step.subtitle }}</p>
+                </div>
+                <p class="mt-3 text-sm leading-6 text-gray-600">{{ step.description }}</p>
               </div>
             </div>
           </template>
@@ -223,39 +254,45 @@ onBeforeUnmount(() => {
           class="grid items-center gap-8 rounded-lg border border-gray-100 bg-gray-50 px-5 py-6 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-8"
         >
           <div>
-            <p class="mb-3 text-sm font-semibold tracking-wide text-amber-600 uppercase">
+            <p class="mb-4 text-sm font-semibold tracking-wide text-amber-600 uppercase">
               Local Processing
             </p>
-            <h2 class="text-2xl font-bold text-gray-950 sm:text-3xl">
-              Your photos stay on your device.
-            </h2>
+            <h2 class="text-2xl font-bold text-gray-950 sm:text-3xl">照片只留在你的裝置上。</h2>
             <p class="mt-4 max-w-2xl text-sm leading-6 text-gray-600 sm:text-base">
               Exif Frame keeps image processing inside your browser, so you can frame and export
               photos without sending them away.
             </p>
           </div>
 
-          <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+          <div class="grid gap-3 lg:grid-cols-1">
             <div
               v-for="point in privacyPoints"
-              :key="point"
-              class="flex min-h-16 items-center gap-3 rounded-lg bg-white px-4 py-3 text-sm font-semibold text-gray-800 ring-1 ring-gray-100"
+              :key="point.title"
+              class="flex min-h-16 items-center gap-3 rounded-lg bg-white px-4 py-3 text-gray-800 ring-1 ring-gray-100"
             >
               <span
                 class="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600"
               >
                 <i class="ri-check-line text-lg" aria-hidden="true"></i>
               </span>
-              <span>{{ point }}</span>
+              <span class="min-w-0">
+                <span class="block text-xl font-semibold text-gray-950">{{ point.title }}</span>
+                <span class="mt-1 block text-sm font-semibold text-gray-950">{{
+                  point.subtitle
+                }}</span>
+              </span>
             </div>
           </div>
         </div>
       </section>
 
       <section class="w-full py-8 sm:py-12 lg:py-16">
-        <div class="mb-8 flex flex-col gap-2 sm:mb-10">
-          <p class="text-sm font-semibold tracking-wide text-amber-600 uppercase">Features</p>
+        <div class="mb-8 sm:mb-10">
+          <p class="mb-4 text-sm font-semibold tracking-wide text-amber-600 uppercase">Features</p>
           <h2 class="text-2xl font-bold text-gray-950 sm:text-3xl">為攝影輸出準備的細節</h2>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-gray-600 sm:text-base">
+            Fine-tune metadata, branding, layout, color, and film-inspired finishing in one place.
+          </p>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -269,7 +306,8 @@ onBeforeUnmount(() => {
             >
               <i :class="feature.icon" aria-hidden="true"></i>
             </div>
-            <h3 class="text-base font-semibold text-gray-950">{{ feature.title }}</h3>
+            <h3 class="text-xl font-semibold text-gray-950">{{ feature.title }}</h3>
+            <p class="mt-1 text-sm font-semibold text-gray-950">{{ feature.subtitle }}</p>
             <p class="mt-3 text-sm leading-6 text-gray-600">{{ feature.description }}</p>
           </div>
         </div>
