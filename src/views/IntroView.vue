@@ -4,6 +4,9 @@ import { RouterLink } from 'vue-router'
 import introImage01 from '@/assets/intro/intro_01.jpg'
 import introImage02 from '@/assets/intro/intro_02.jpg'
 import introImage03 from '@/assets/intro/intro_03.jpg'
+import introImage04 from '@/assets/intro/intro_04.jpg'
+import introImage05 from '@/assets/intro/intro_05.jpg'
+import introImage06 from '@/assets/intro/intro_06.jpg'
 
 const introImages = [
   {
@@ -211,7 +214,7 @@ onBeforeUnmount(() => {
         </div>
       </section>
 
-      <section class="w-full pt-8 pb-4 sm:pt-12 lg:pt-16">
+      <section class="w-full pt-14 pb-8 sm:py-12 lg:py-16">
         <div class="mb-8 sm:mb-10">
           <p class="mb-4 text-sm font-semibold tracking-wide text-amber-600 uppercase">
             How it works
@@ -239,7 +242,7 @@ onBeforeUnmount(() => {
               </div>
               <div class="min-w-0">
                 <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                  <h3 class="text-xl font-bold text-gray-950">{{ step.title }}</h3>
+                  <h3 class="text-lg sm:text-xl font-bold text-gray-950">{{ step.title }}</h3>
                   <p class="text-sm font-semibold text-gray-950">{{ step.subtitle }}</p>
                 </div>
                 <p class="mt-3 text-sm leading-6 text-gray-600">{{ step.description }}</p>
@@ -276,7 +279,9 @@ onBeforeUnmount(() => {
                 <i class="ri-check-line text-lg" aria-hidden="true"></i>
               </span>
               <span class="min-w-0">
-                <span class="block text-xl font-semibold text-gray-950">{{ point.title }}</span>
+                <span class="block text-lg sm:text-xl font-semibold text-gray-950">{{
+                  point.title
+                }}</span>
                 <span class="mt-1 block text-sm font-semibold text-gray-950">{{
                   point.subtitle
                 }}</span>
@@ -306,7 +311,7 @@ onBeforeUnmount(() => {
             >
               <i :class="feature.icon" aria-hidden="true"></i>
             </div>
-            <h3 class="text-xl font-semibold text-gray-950">{{ feature.title }}</h3>
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-950">{{ feature.title }}</h3>
             <p class="mt-1 text-sm font-semibold text-gray-950">{{ feature.subtitle }}</p>
             <p class="mt-3 text-sm leading-6 text-gray-600">{{ feature.description }}</p>
           </div>
@@ -315,19 +320,40 @@ onBeforeUnmount(() => {
 
       <section class="w-full py-8 sm:py-12 lg:py-16">
         <div
-          class="grid items-center gap-8 rounded-lg bg-gray-900 px-5 py-7 text-white sm:px-6 lg:grid-cols-[0.85fr_1.15fr] lg:px-8 lg:py-9"
+          class="grid items-center gap-8 overflow-hidden rounded-lg bg-gray-900 px-5 py-7 text-white sm:px-0 sm:py-0 xl:grid-cols-[0.9fr_1.1fr]"
         >
           <div
-            class="flex size-16 items-center justify-center rounded-full bg-white/10 text-3xl text-amber-300 ring-1 ring-white/10"
+            class="flex size-16 items-center justify-center rounded-full bg-white/10 text-3xl text-amber-300 ring-1 ring-white/10 sm:hidden"
           >
             <i class="ri-folder-zip-line" aria-hidden="true"></i>
           </div>
 
-          <div>
-            <p class="mb-3 text-sm font-semibold tracking-wide text-amber-300 uppercase">
+          <div class="hidden h-78 overflow-hidden sm:block">
+            <div class="relative mx-auto h-full w-full max-w-[560px] xl:mx-0 xl:max-w-none">
+              <img
+                :src="introImage06"
+                alt=""
+                class="absolute top-20 left-4 z-30 aspect-[2112/1791] w-[78%] max-w-[420px] rotate-[-3deg] rounded-lg border border-white/10 bg-white object-cover shadow-2xl xl:left-8"
+              />
+              <img
+                :src="introImage05"
+                alt=""
+                class="absolute top-16 left-18 z-20 aspect-[2112/1791] w-[72%] max-w-[390px] rotate-[4deg] rounded-lg border border-white/10 bg-white object-cover shadow-xl xl:left-24"
+              />
+              <img
+                :src="introImage04"
+                alt=""
+                class="absolute top-12 left-30 z-10 aspect-[2112/1791] w-[66%] max-w-[360px] rotate-[9deg] rounded-lg border border-white/10 bg-white object-cover shadow-lg xl:left-38"
+              />
+            </div>
+          </div>
+
+          <div class="sm:px-6 sm:py-8 xl:px-8 xl:py-9">
+            <p class="mb-4 text-sm font-semibold tracking-wide text-amber-300 uppercase">
               Batch Export
             </p>
-            <h2 class="text-2xl font-bold sm:text-3xl">Export a whole set at once.</h2>
+            <h2 class="text-2xl font-bold sm:text-3xl">一次匯出整組照片。</h2>
+            <p class="mt-2 text-xl font-semibold sm:text-2xl">Export a whole set at once.</p>
             <p class="mt-4 max-w-3xl text-sm leading-6 text-gray-300 sm:text-base">
               一次處理多張照片，套用同一組版面、資訊顯示、濾鏡與噪點，最後打包成 ZIP
               匯出，適合旅拍、活動紀錄或一整組作品整理。
@@ -337,8 +363,11 @@ onBeforeUnmount(() => {
       </section>
 
       <section class="w-full pt-8 pb-14 text-center sm:pt-12 sm:pb-18 lg:pt-16">
-        <p class="text-sm font-semibold tracking-wide text-amber-600 uppercase">Start Now</p>
-        <h2 class="mt-3 text-3xl font-bold text-gray-950 sm:text-4xl">Ready to frame your shot?</h2>
+        <p class="mb-4 text-sm font-semibold tracking-wide text-amber-600 uppercase">Start Now</p>
+        <h2 class="text-3xl font-bold text-gray-950 sm:text-4xl">準備好完成你的照片了嗎？</h2>
+        <p class="mt-2 text-xl font-semibold text-gray-950 sm:text-2xl">
+          Ready to frame your shot?
+        </p>
         <div class="mt-7 flex justify-center">
           <RouterLink
             to="/editor"
