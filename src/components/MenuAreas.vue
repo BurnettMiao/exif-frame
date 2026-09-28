@@ -4,6 +4,7 @@ import FilterArea from '@/components/FilterArea.vue'
 import LayoutArea from '@/components/LayoutArea.vue'
 import InfoArea from '@/components/InfoArea.vue'
 import { useEditorStore, type EditorPanelName } from '@/stores/editorStore'
+import { usePhotoCollection } from '@/composables/usePhotoCollection'
 
 type Menu = {
   icon: string
@@ -11,6 +12,7 @@ type Menu = {
 }
 
 const editorStore = useEditorStore()
+const { previewItems } = usePhotoCollection()
 
 const menus = ref<Menu[]>([
   {
@@ -83,9 +85,23 @@ const handleSelected = (name: EditorPanelName) => {
       class="absolute top-0 left-[65px] h-full max-lg:relative max-lg:z-20 max-lg:left-0 max-lg:w-full max-lg:min-h-0 max-lg:overflow-hidden"
       :class="mobilePanelClass"
     >
-      <LayoutArea v-if="editorStore.currentPanel === '排版區'" />
-      <InfoArea v-if="editorStore.currentPanel === '資訊區'" />
-      <FilterArea v-if="editorStore.currentPanel === '濾鏡區'" />
+      <div
+        v-if="previewItems.length === 0"
+        class="flex h-full min-h-36 w-full min-w-60 items-center justify-center bg-white px-4 py-6 text-center text-sm font-medium text-gray-500 max-lg:min-h-[120px] max-lg:min-w-0"
+      >
+        尚未選擇照片
+      </div>
+      <template v-else>
+        <LayoutArea v-if="editorStore.currentPanel === '排版區'" />
+        <InfoArea v-if="editorStore.currentPanel === '資訊區'" />
+        <FilterArea v-if="editorStore.currentPanel === '濾鏡區'" />
+        <div
+          v-if="editorStore.currentPanel === '版面調整'"
+          class="flex h-full min-h-36 w-full min-w-60 items-center justify-center bg-white px-4 py-6 text-center text-sm font-medium text-gray-500 max-lg:min-h-[120px] max-lg:min-w-0"
+        >
+          尚未選擇照片
+        </div>
+      </template>
     </div>
   </div>
 </template>
