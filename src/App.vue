@@ -39,46 +39,56 @@ onBeforeUnmount(() => {
       <div class="flex items-center justify-between w-full max-w-384 mx-auto py-3 px-3 sm:p-4">
         <RouterLink
           to="/editor"
-          class="font-bold text-xl sm:text-2xl flex items-center gap-x-2 text-gray-800"
+          class="font-bold text-xl sm:text-2xl flex min-w-0 items-center gap-x-2 text-gray-800"
         >
-          <i class="ri-camera-3-line"></i> <span>Exif Frame</span>
+          <i class="ri-camera-3-line shrink-0"></i> <span class="truncate">Exif Frame</span>
         </RouterLink>
 
-        <div class="flex items-center gap-2">
+        <div class="flex shrink-0 items-center gap-4">
           <RouterLink
             to="/intro"
-            class="hidden min-h-10 items-center rounded-lg px-3 py-1 text-sm text-gray-600 hover:text-amber-600 sm:flex"
-            active-class="text-amber-600"
+            class="flex size-10 items-center justify-center text-gray-600 hover:text-amber-600 sm:w-auto sm:px-2 sm:py-1 sm:text-base"
+            active-class="text-amber-600 bg-amber-50 sm:bg-transparent sm:border-b-2 sm:border-amber-600"
+            title="介紹"
+            aria-label="介紹"
           >
-            介紹
+            <i class="ri-information-line text-xl sm:hidden" aria-hidden="true"></i>
+            <span class="hidden sm:inline">介紹</span>
           </RouterLink>
           <RouterLink
             to="/editor"
-            class="hidden min-h-10 items-center rounded-lg px-3 py-1 text-sm text-gray-600 hover:text-amber-600 sm:flex"
-            active-class="text-amber-600"
+            class="flex size-10 items-center justify-center text-gray-600 hover:text-amber-600 sm:w-auto sm:px-2 sm:py-1 sm:text-base"
+            active-class="text-amber-600 bg-amber-50 sm:bg-transparent sm:border-b-2 sm:border-amber-600"
+            title="編輯器"
+            aria-label="編輯器"
           >
-            編輯器
+            <i class="ri-edit-line text-xl sm:hidden" aria-hidden="true"></i>
+            <span class="hidden sm:inline">編輯器</span>
           </RouterLink>
 
           <button
             v-if="isEditorRoute"
             @click="handleExport"
-            class="flex min-h-10 items-center px-3 py-1 rounded-lg bg-white text-gray-800 gap-x-2 border border-gray-800 cursor-pointer hover:bg-gray-800 hover:text-white transition-all ease duration-300"
+            class="flex size-10 items-center justify-center rounded-lg border border-gray-800 bg-white text-gray-800 cursor-pointer transition-all ease duration-300 hover:bg-gray-800 hover:text-white sm:w-auto sm:px-3 sm:py-1 sm:gap-x-2"
+            title="匯出圖片"
+            aria-label="匯出圖片"
           >
             <i class="ri-export-line text-xl"></i>
-            <div class="text-sm sm:text-base">匯出圖片</div>
+            <div class="hidden text-sm sm:block sm:text-base">匯出圖片</div>
           </button>
           <button
             v-if="isEditorRoute"
             @click="handleExportAll"
             :disabled="isExportingAll"
-            class="flex min-h-10 items-center px-3 py-1 rounded-lg bg-gray-800 text-white gap-x-2 border border-gray-800 cursor-pointer hover:bg-amber-500 hover:border-amber-500 disabled:cursor-wait disabled:opacity-60 transition-all ease duration-300"
+            class="flex size-10 items-center justify-center rounded-lg border border-gray-800 bg-gray-800 text-white cursor-pointer transition-all ease duration-300 hover:border-amber-500 hover:bg-amber-500 disabled:cursor-wait disabled:opacity-60 sm:w-auto sm:px-3 sm:py-1 sm:gap-x-2"
+            title="匯出全部"
+            aria-label="匯出全部"
           >
             <i
               :class="isExportingAll ? 'ri-loader-4-line animate-spin' : 'ri-folder-zip-line'"
               class="text-xl"
             ></i>
-            <div class="text-sm sm:text-base">
+            <div class="hidden text-sm sm:block sm:text-base">
               {{ isExportingAll ? '匯出中' : '匯出全部' }}
             </div>
           </button>

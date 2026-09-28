@@ -211,6 +211,20 @@ const setCanvasRef = (element: unknown) => {
 
   canvas.value = nextCanvas
   updatePreviewFrameSize()
+
+  if (nextCanvas && activeItem.value) {
+    const token = loadToken
+    void renderPreviewItem(activeItem.value)
+      .then((renderedPreview) => {
+        if (token !== loadToken || canvas.value !== nextCanvas) return
+        currentImage.value = renderedPreview.image
+        logoImage.value = renderedPreview.logo
+        copyRenderedPreviewToCanvas(renderedPreview)
+      })
+      .catch((error) => {
+        console.error('預覽圖片載入失敗', error)
+      })
+  }
 }
 
 const previewFrameStyle = computed(() => {
@@ -738,7 +752,7 @@ onMounted(() => {
     previewResizeObserver.observe(previewStack.value)
   }
 
-  addPhoto(pic)
+  // addPhoto(pic)
 })
 
 onBeforeUnmount(() => {

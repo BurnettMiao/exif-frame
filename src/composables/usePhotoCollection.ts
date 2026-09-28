@@ -8,6 +8,7 @@ export interface PreviewItem {
   id: string
   url: string
   sourceUrl: string
+  objectUrls: string[]
   cropUrl?: string
   info: PhotoInfo
   originalInfo: PhotoInfo
@@ -54,7 +55,13 @@ export function usePhotoCollection() {
     patch: Partial<
       Pick<
         PreviewItem,
-        'url' | 'sourceUrl' | 'cropUrl' | 'info' | 'originalInfo' | 'infoVisibility'
+        | 'url'
+        | 'sourceUrl'
+        | 'objectUrls'
+        | 'cropUrl'
+        | 'info'
+        | 'originalInfo'
+        | 'infoVisibility'
       >
     >,
   ) {
@@ -72,6 +79,33 @@ export function usePhotoCollection() {
     }
 
     return updatedItem
+  }
+
+  function appendObjectUrl(target: PreviewItem, url: string) {
+    const currentItem = previewItems.value.find((item) => item.id === target.id) ?? target
+    if (currentItem.objectUrls.includes(url)) return currentItem
+
+    return (
+      updatePreviewItem(target, {
+        objectUrls: [...currentItem.objectUrls, url],
+      }) ?? currentItem
+    )
+  }
+
+  function releaseObjectUrl(target: PreviewItem, url: string) {
+    const currentItem = previewItems.value.find((item) => item.id === target.id) ?? target
+    if (!currentItem.objectUrls.includes(url)) return currentItem
+
+    URL.revokeObjectURL(url)
+    return (
+      updatePreviewItem(target, {
+        objectUrls: currentItem.objectUrls.filter((objectUrl) => objectUrl !== url),
+      }) ?? currentItem
+    )
+  }
+
+  function releaseObjectUrls(item: PreviewItem) {
+    Array.from(new Set(item.objectUrls)).forEach((url) => URL.revokeObjectURL(url))
   }
 
   async function readPhotoInfo(file: File): Promise<PhotoInfo> {
@@ -128,6 +162,7 @@ export function usePhotoCollection() {
       id: String(nextPreviewItemId++),
       url: originalUrl,
       sourceUrl: originalUrl,
+      objectUrls: [originalUrl],
       info: { error: 'EXIF 讀取中' },
       originalInfo: { error: 'EXIF 讀取中' },
       infoVisibility: defaultPhotoInfoVisibility(),
@@ -147,14 +182,13 @@ export function usePhotoCollection() {
       .then((processedBlob) => {
         const compressedUrl = URL.createObjectURL(processedBlob)
         const currentItem = previewItems.value.find((previewItem) => previewItem.id === item.id)
+        appendObjectUrl(item, compressedUrl)
         const updatedItem = updatePreviewItem(item, {
           sourceUrl: compressedUrl,
           url: currentItem?.cropUrl ? currentItem.url : compressedUrl,
         })
 
-        if (updatedItem) {
-          URL.revokeObjectURL(originalUrl)
-        } else {
+        if (!updatedItem) {
           URL.revokeObjectURL(compressedUrl)
         }
 
@@ -183,6 +217,7 @@ export function usePhotoCollection() {
   function applyCrop(target: PreviewItem, croppedBlob: Blob) {
     const croppedUrl = URL.createObjectURL(croppedBlob)
     const previousCropUrl = target.cropUrl
+    appendObjectUrl(target, croppedUrl)
     const updatedItem = updatePreviewItem(target, {
       url: croppedUrl,
       cropUrl: croppedUrl,
@@ -194,7 +229,7 @@ export function usePhotoCollection() {
     }
 
     if (previousCropUrl && previousCropUrl !== croppedUrl) {
-      URL.revokeObjectURL(previousCropUrl)
+      releaseObjectUrl(updatedItem, previousCropUrl)
     }
 
     return updatedItem
@@ -209,7 +244,7 @@ export function usePhotoCollection() {
       cropUrl: undefined,
     })
 
-    URL.revokeObjectURL(previousCropUrl)
+    releaseObjectUrl(updatedItem ?? target, previousCropUrl)
     return updatedItem ?? target
   }
 
@@ -242,12 +277,8 @@ export function usePhotoCollection() {
   // 刪除照片並釋放 object URL
   function deletePhoto(index: number) {
     const deletedItem = previewItems.value[index]
-    if (deletedItem?.sourceUrl) {
-      URL.revokeObjectURL(deletedItem.sourceUrl)
-    }
-
-    if (deletedItem?.cropUrl) {
-      URL.revokeObjectURL(deletedItem.cropUrl)
+    if (deletedItem) {
+      releaseObjectUrls(deletedItem)
     }
 
     previewItems.value.splice(index, 1)
