@@ -28,6 +28,7 @@ const isPreviewAnimating = ref(false)
 const isPreviewPreparing = ref(false)
 const isUploadingPhoto = ref(false)
 const isExportingAll = ref(false)
+const showThumbnailStrip = ref(true)
 let previewAnimationTimer: number | null = null
 let deferredStackPreviewTimer: number | null = null
 let uploadToken = 0
@@ -577,6 +578,12 @@ const selectThumbnailPhoto = (index: number) => {
   selectPhoto(index)
 }
 
+const toggleThumbnailStrip = async () => {
+  showThumbnailStrip.value = !showThumbnailStrip.value
+  await nextTick()
+  updatePreviewFrameSize()
+}
+
 const updatePreviewFrameSize = () => {
   if (!previewStack.value) return
 
@@ -837,6 +844,18 @@ watch(
     >
       <!-- 大圖預覽 -->
       <div class="relative w-full flex-1 min-h-0 flex items-center justify-center">
+        <button
+          type="button"
+          class="thumbnail-strip-toggle"
+          :aria-label="showThumbnailStrip ? '隱藏縮圖列' : '顯示縮圖列'"
+          :title="showThumbnailStrip ? '隱藏縮圖列' : '顯示縮圖列'"
+          @click="toggleThumbnailStrip"
+        >
+          <i
+            :class="showThumbnailStrip ? 'ri-layout-bottom-line' : 'ri-layout-bottom-2-line'"
+            aria-hidden="true"
+          ></i>
+        </button>
         <div
           ref="previewStack"
           class="preview-stack"
@@ -874,6 +893,15 @@ watch(
           <i class="ri-arrow-right-line" aria-hidden="true"></i>
           <span>Next</span>
         </button>
+        <label
+          v-if="!showThumbnailStrip && previewItems.length < maxPhotoCount"
+          for="image-upload"
+          class="preview-upload-button"
+          aria-label="新增照片"
+          title="新增照片"
+        >
+          <i class="ri-image-add-line" aria-hidden="true"></i>
+        </label>
         <div
           v-if="isUploadingPhoto"
           class="upload-loading-overlay"
@@ -889,6 +917,7 @@ watch(
 
       <!-- 縮圖列 -->
       <ThumbnailStrip
+        v-if="showThumbnailStrip"
         :items="previewItems"
         :current-index="currentPreviewIndex"
         :max-count="maxPhotoCount"
@@ -956,6 +985,43 @@ watch(
 .next-preview-button:disabled {
   cursor: not-allowed;
   opacity: 0.42;
+}
+
+.thumbnail-strip-toggle,
+.preview-upload-button {
+  position: absolute;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 94%);
+  color: #111827;
+  font-size: 20px;
+  box-shadow: 0 12px 26px rgb(15 23 42 / 14%);
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
+}
+
+.thumbnail-strip-toggle {
+  top: 16px;
+  right: 24px;
+}
+
+.preview-upload-button {
+  right: 140px;
+  bottom: 16px;
+  cursor: pointer;
+}
+
+.thumbnail-strip-toggle:hover,
+.preview-upload-button:hover {
+  transform: translateY(-2px);
+  background: white;
 }
 
 .upload-loading-overlay {
@@ -1124,6 +1190,20 @@ watch(
 
   .next-preview-button span {
     display: none;
+  }
+
+  .thumbnail-strip-toggle {
+    top: 10px;
+    right: 14px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .preview-upload-button {
+    right: 66px;
+    bottom: 10px;
+    width: 44px;
+    height: 44px;
   }
 }
 </style>
