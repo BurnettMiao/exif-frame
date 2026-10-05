@@ -8,6 +8,7 @@ const filterStore = useFilterStore()
 const route = useRoute()
 const isEditorRoute = computed(() => route.name === 'editor')
 const isExportingAll = ref(false)
+// const feedbackUrl = ''
 
 const handleExport = () => {
   filterStore.download()
@@ -22,6 +23,15 @@ const handleExportAllState = (event: Event) => {
   const customEvent = event as CustomEvent<{ isExporting: boolean }>
   isExportingAll.value = customEvent.detail?.isExporting ?? false
 }
+
+// const openFeedbackLink = () => {
+//   if (!feedbackUrl) {
+//     window.alert('問題回報表單準備中，之後會放上回報連結。')
+//     return
+//   }
+//
+//   window.open(feedbackUrl, '_blank', 'noopener,noreferrer')
+// }
 
 onMounted(() => {
   window.addEventListener('exif-frame:export-all-state', handleExportAllState)
@@ -38,33 +48,34 @@ onBeforeUnmount(() => {
     <header class="w-full border-b border-b-gray-200">
       <div class="flex items-center justify-between w-full max-w-384 mx-auto py-3 px-3 sm:p-4">
         <RouterLink
-          to="/editor"
+          to="/intro"
           class="font-bold text-xl sm:text-2xl flex min-w-0 items-center gap-x-2 text-gray-800"
         >
           <i class="ri-camera-3-line shrink-0"></i> <span class="truncate">Exif Frame</span>
         </RouterLink>
 
-        <div class="flex shrink-0 items-center gap-4">
+        <div class="flex shrink-0 items-center gap-2 sm:gap-4">
           <RouterLink
-            to="/intro"
-            class="flex size-10 items-center justify-center text-gray-600 hover:text-amber-600 sm:w-auto sm:px-2 sm:py-1 sm:text-base"
-            active-class="text-amber-600 bg-amber-50 sm:bg-transparent sm:border-b-2 sm:border-amber-600"
-            title="介紹"
-            aria-label="介紹"
-          >
-            <i class="ri-information-line text-xl sm:hidden" aria-hidden="true"></i>
-            <span class="hidden sm:inline">介紹</span>
-          </RouterLink>
-          <RouterLink
+            v-if="!isEditorRoute"
             to="/editor"
-            class="flex size-10 items-center justify-center text-gray-600 hover:text-amber-600 sm:w-auto sm:px-2 sm:py-1 sm:text-base"
+            class="flex size-10 items-center justify-center text-gray-600 hover:text-amber-600 sm:w-auto sm:px-2 sm:py-1 sm:text-base sm:gap-x-1.5"
             active-class="text-amber-600 bg-amber-50 sm:bg-transparent sm:border-b-2 sm:border-amber-600"
             title="編輯器"
             aria-label="編輯器"
           >
-            <i class="ri-edit-line text-xl sm:hidden" aria-hidden="true"></i>
+            <i class="ri-edit-line text-xl" aria-hidden="true"></i>
             <span class="hidden sm:inline">編輯器</span>
           </RouterLink>
+          <!-- <button
+            type="button"
+            class="flex size-10 items-center justify-center text-gray-600 hover:text-amber-600 sm:w-auto sm:px-2 sm:py-1 sm:text-base sm:gap-x-1.5"
+            title="回報問題"
+            aria-label="回報問題"
+            @click="openFeedbackLink"
+          >
+            <i class="ri-bug-line text-xl" aria-hidden="true"></i>
+            <span class="hidden sm:inline">回報問題</span>
+          </button> -->
 
           <button
             v-if="isEditorRoute"

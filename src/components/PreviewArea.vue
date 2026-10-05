@@ -28,7 +28,9 @@ const isPreviewAnimating = ref(false)
 const isPreviewPreparing = ref(false)
 const isUploadingPhoto = ref(false)
 const isExportingAll = ref(false)
+// const showSupportPrompt = ref(false)
 const showThumbnailStrip = ref(true)
+// const supportUrl = ''
 let previewAnimationTimer: number | null = null
 let deferredStackPreviewTimer: number | null = null
 let uploadToken = 0
@@ -180,6 +182,15 @@ const downloadBlob = (blob: Blob, filename: string) => {
   link.remove()
   window.setTimeout(() => URL.revokeObjectURL(url), 30_000)
 }
+
+// const openSupportLink = () => {
+//   if (!supportUrl) {
+//     window.alert('支持連結準備中，之後會放上 Buy Me a Coffee。')
+//     return
+//   }
+//
+//   window.open(supportUrl, '_blank', 'noopener,noreferrer')
+// }
 
 const canvasToJpegBytes = (sourceCanvas: HTMLCanvasElement) =>
   new Promise<Uint8Array>((resolve, reject) => {
@@ -707,6 +718,7 @@ const downloadImage = () => {
     (blob) => {
       if (!blob) return
       downloadBlob(blob, 'edited-photo.jpg')
+      // showSupportPrompt.value = true
     },
     'image/jpeg',
     0.95,
@@ -736,6 +748,7 @@ const downloadAllImages = async () => {
     )
 
     downloadBlob(createZipBlob(entries), 'exif-frame-export.zip')
+    // showSupportPrompt.value = true
   } catch (error) {
     console.error('批次匯出失敗', error)
     window.alert('批次匯出失敗，請再試一次。')
@@ -913,6 +926,34 @@ watch(
             <span>讀取照片中</span>
           </div>
         </div>
+        <!-- <div
+          v-if="showSupportPrompt"
+          class="support-prompt"
+          role="status"
+          aria-live="polite"
+        >
+          <button
+            type="button"
+            class="support-prompt-close"
+            title="關閉"
+            aria-label="關閉支持提示"
+            @click="showSupportPrompt = false"
+          >
+            <i class="ri-close-line" aria-hidden="true"></i>
+          </button>
+          <div class="support-prompt-icon">
+            <i class="ri-cup-line" aria-hidden="true"></i>
+          </div>
+          <div class="support-prompt-copy">
+            <p class="support-prompt-title">喜歡這個工具嗎？</p>
+            <p class="support-prompt-text">
+              如果它幫你做出喜歡的照片，可以請我喝杯咖啡，支持我繼續做更多相框模板。
+            </p>
+          </div>
+          <button type="button" class="support-prompt-action" @click="openSupportLink">
+            支持開發
+          </button>
+        </div> -->
       </div>
 
       <!-- 縮圖列 -->
@@ -1061,6 +1102,95 @@ watch(
   animation: upload-loading-spin 780ms linear infinite;
 }
 
+.support-prompt {
+  position: absolute;
+  right: 24px;
+  bottom: 72px;
+  z-index: 18;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: min(520px, calc(100% - 48px));
+  padding: 14px 48px 14px 14px;
+  border: 1px solid rgb(245 158 11 / 28%);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 96%);
+  color: #111827;
+  box-shadow: 0 20px 44px rgb(15 23 42 / 16%);
+  backdrop-filter: blur(8px);
+}
+
+.support-prompt-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.support-prompt-close:hover {
+  color: #d97706;
+}
+
+.support-prompt-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: #fffbeb;
+  color: #d97706;
+  font-size: 22px;
+}
+
+.support-prompt-copy {
+  min-width: 0;
+}
+
+.support-prompt-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.support-prompt-text {
+  margin: 3px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #4b5563;
+}
+
+.support-prompt-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #111827;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.support-prompt-action:hover {
+  background: #f59e0b;
+}
+
 @keyframes upload-loading-spin {
   to {
     transform: rotate(360deg);
@@ -1204,6 +1334,24 @@ watch(
     bottom: 10px;
     width: 44px;
     height: 44px;
+  }
+
+  .support-prompt {
+    bottom: 64px;
+  }
+}
+
+@media (max-width: 640px) {
+  .support-prompt {
+    right: 12px;
+    grid-template-columns: auto minmax(0, 1fr);
+    width: calc(100% - 24px);
+    padding: 12px 42px 12px 12px;
+  }
+
+  .support-prompt-action {
+    grid-column: 1 / -1;
+    width: 100%;
   }
 }
 </style>

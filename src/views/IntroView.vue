@@ -113,6 +113,7 @@ const stackStyles = [
 const currentImageIndex = ref(0)
 const isIntroStackAnimating = ref(false)
 const isIntroStackPaused = ref(false)
+// const supportUrl = ''
 let introStackInterval: number | null = null
 let introStackAnimationTimer: number | null = null
 
@@ -145,6 +146,15 @@ const rotateIntroStack = () => {
     introStackAnimationTimer = null
   }, 620)
 }
+
+// const openSupportLink = () => {
+//   if (!supportUrl) {
+//     window.alert('支持連結準備中，之後會放上 Buy Me a Coffee。')
+//     return
+//   }
+//
+//   window.open(supportUrl, '_blank', 'noopener,noreferrer')
+// }
 
 onMounted(() => {
   introStackInterval = window.setInterval(rotateIntroStack, 3600)
@@ -193,6 +203,15 @@ onBeforeUnmount(() => {
               <i class="ri-arrow-right-line text-lg" aria-hidden="true"></i>
               開始編輯
             </RouterLink>
+            <!-- <button
+              type="button"
+              class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 transition hover:border-amber-300 hover:text-amber-600"
+              title="支持開發"
+              @click="openSupportLink"
+            >
+              <i class="ri-cup-line text-lg" aria-hidden="true"></i>
+              請我喝杯咖啡
+            </button> -->
           </div>
         </div>
 
