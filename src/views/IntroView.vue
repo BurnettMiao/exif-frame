@@ -377,7 +377,7 @@ onBeforeUnmount(() => {
           </p>
           <h2 class="text-2xl font-bold text-gray-950 sm:text-3xl">目前支援的廠牌 Logo</h2>
           <p class="mt-2 max-w-2xl text-sm leading-6 text-gray-600 sm:text-base">
-            匯入照片後，會依照 EXIF 中的相機廠牌自動套用對應 Logo。
+            Automatically match camera brand logos from your photo's EXIF metadata.
           </p>
         </div>
 
