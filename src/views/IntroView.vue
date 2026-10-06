@@ -7,6 +7,12 @@ import introImage03 from '@/assets/intro/intro_03.jpg'
 import introImage04 from '@/assets/intro/intro_04.jpg'
 import introImage05 from '@/assets/intro/intro_05.jpg'
 import introImage06 from '@/assets/intro/intro_06.jpg'
+import appleLogo from '@/assets/logos/apple_logo.svg'
+import canonLogo from '@/assets/logos/canon_logo.svg'
+import fujifilmLogo from '@/assets/logos/fujifilm_logo.svg'
+import googleLogo from '@/assets/logos/google_logo.svg'
+import nikonLogo from '@/assets/logos/nikon_logo.svg'
+import sonyLogo from '@/assets/logos/sony_logo.svg'
 
 const introImages = [
   {
@@ -89,6 +95,33 @@ const featureHighlights = [
     title: '底片感濾鏡與噪點',
     subtitle: 'Film filters and grain',
     description: '加入濾鏡與噪點，做出更接近底片的復古質感。',
+  },
+]
+
+const supportedBrandLogos = [
+  {
+    name: 'Sony',
+    src: sonyLogo,
+  },
+  {
+    name: 'Nikon',
+    src: nikonLogo,
+  },
+  {
+    name: 'Canon',
+    src: canonLogo,
+  },
+  {
+    name: 'Fujifilm',
+    src: fujifilmLogo,
+  },
+  {
+    name: 'Apple',
+    src: appleLogo,
+  },
+  {
+    name: 'Google',
+    src: googleLogo,
   },
 ]
 
@@ -333,6 +366,32 @@ onBeforeUnmount(() => {
             <h3 class="text-lg sm:text-xl font-semibold text-gray-950">{{ feature.title }}</h3>
             <p class="mt-1 text-sm font-semibold text-gray-950">{{ feature.subtitle }}</p>
             <p class="mt-3 text-sm leading-6 text-gray-600">{{ feature.description }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="w-full py-8 sm:py-12 lg:py-16">
+        <div class="mb-8 sm:mb-10">
+          <p class="mb-4 text-sm font-semibold tracking-wide text-amber-600 uppercase">
+            Supported Logos
+          </p>
+          <h2 class="text-2xl font-bold text-gray-950 sm:text-3xl">目前支援的廠牌 Logo</h2>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-gray-600 sm:text-base">
+            匯入照片後，會依照 EXIF 中的相機廠牌自動套用對應 Logo。
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div
+            v-for="brand in supportedBrandLogos"
+            :key="brand.name"
+            class="flex min-h-22 items-center justify-center rounded-lg border border-gray-100 bg-white px-4 py-5 shadow-sm"
+          >
+            <img
+              :src="brand.src"
+              :alt="`${brand.name} logo`"
+              class="h-[35px] max-w-28 object-contain"
+            />
           </div>
         </div>
       </section>
