@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import introImage01 from '@/assets/intro/intro_01.jpg'
-import introImage02 from '@/assets/intro/intro_02.jpg'
-import introImage03 from '@/assets/intro/intro_03.jpg'
+import introImage01 from '@/assets/intro/intro_07.jpg'
+import introImage02 from '@/assets/intro/intro_01.jpg'
+import introImage03 from '@/assets/intro/intro_02.jpg'
 import introImage04 from '@/assets/intro/intro_04.jpg'
 import introImage05 from '@/assets/intro/intro_05.jpg'
 import introImage06 from '@/assets/intro/intro_06.jpg'
@@ -46,7 +46,7 @@ const workflowSteps = [
     icon: 'ri-equalizer-3-line',
     title: '自訂樣式',
     subtitle: 'Customize',
-    description: '調整版型、Logo、資訊顯示、濾鏡與噪點',
+    description: '調整版型、Logo、資訊顯示、Caption、手寫字體、濾鏡與噪點',
   },
   {
     icon: 'ri-folder-zip-line',
@@ -86,9 +86,9 @@ const featureHighlights = [
   },
   {
     icon: 'ri-layout-4-line',
-    title: '版面與色彩控制',
-    subtitle: 'Layout and color control',
-    description: '調整邊距、資訊位置、背景與文字顏色。',
+    title: '版面、色彩與 Caption',
+    subtitle: 'Layout, color and caption',
+    description: '調整邊距、資訊位置、背景與文字顏色，也能為照片加入手寫 Caption。',
   },
   {
     icon: 'ri-contrast-drop-2-line',
@@ -220,7 +220,8 @@ onBeforeUnmount(() => {
             讓照片資訊成為畫面的一部分
           </h1>
           <p class="mt-6 text-base leading-8 text-gray-600 sm:text-lg">
-            上傳照片、讀取 EXIF、調整版型，再加上濾鏡與噪點，輸出一張乾淨、有攝影感的相框照。
+            上傳照片、讀取 EXIF、調整版型，加入 Caption
+            與手寫字體，再以濾鏡與噪點完成一張乾淨、有攝影感的相框照。
           </p>
           <p
             class="mt-5 max-w-xl rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 font-medium text-gray-800"

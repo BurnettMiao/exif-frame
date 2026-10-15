@@ -381,16 +381,8 @@ export function renderFrame({
   const infoHeight = hasInfo ? Math.ceil(textBlock.height + infoPadding * 2) : 0
 
   // 統一算好 Logo 尺寸（使用 base，讓 logo 跟圖片最大邊比例一致）
-  let logoWidth = logo ? base * logoScale : 0
-  let logoHeight = logo && logoWidth ? (logo.height / logo.width) * logoWidth : 0
-
-  // Logo 高度最大不超過 infoHeight
-  const maxLogoHeight = hasInfo ? Math.max(0, infoHeight - infoPadding * 2.4) : logoHeight
-  if (logoHeight > maxLogoHeight) {
-    const aspectRatio = logo ? logo.height / logo.width : 1
-    logoHeight = maxLogoHeight
-    logoWidth = maxLogoHeight / aspectRatio
-  }
+  const logoWidth = logo ? base * logoScale : 0
+  const logoHeight = logo && logoWidth ? (logo.height / logo.width) * logoWidth : 0
 
   // logo 區塊的完整佔高（含上下內距）
   const logoBlockHeight = infoPadding + logoHeight
