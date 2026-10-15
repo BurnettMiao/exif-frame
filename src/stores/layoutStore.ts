@@ -23,11 +23,12 @@ const cloneLayout = (layout: FrameLayout): FrameLayout => ({
 const createLayout = (
   layout: Omit<
     FrameLayout,
-    'fontScale' | 'backgroundColor' | 'primaryTextColor' | 'secondaryTextColor'
+    'fontScale' | 'captionScale' | 'backgroundColor' | 'primaryTextColor' | 'secondaryTextColor'
   >,
 ): FrameLayout => ({
   ...layout,
   fontScale: 1,
+  captionScale: 1,
   backgroundColor: '#ffffff',
   primaryTextColor: '#4b5563',
   secondaryTextColor: '#c0c0c0',
@@ -100,6 +101,10 @@ export const useLayoutStore = defineStore('layout', () => {
     updateLayout({ fontScale: value })
   }
 
+  function updateCaptionScale(value: number) {
+    updateLayout({ captionScale: value })
+  }
+
   function updateBackgroundColor(value: string) {
     updateLayout({ backgroundColor: value })
   }
@@ -138,6 +143,7 @@ export const useLayoutStore = defineStore('layout', () => {
     updateGapRatio,
     updateLogoScale,
     updateFontScale,
+    updateCaptionScale,
     updateBackgroundColor,
     updatePrimaryTextColor,
     updateSecondaryTextColor,

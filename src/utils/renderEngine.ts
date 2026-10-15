@@ -284,19 +284,38 @@ const getLineScale = (role: DisplayLineRole) => {
   }
 }
 
+const getTextScale = (role: DisplayLineRole, captionScale: number) =>
+  role === 'caption' ? getLineScale(role) * captionScale : getLineScale(role)
+
+const getLineFont = (role: DisplayLineRole, fontSize: number) => {
+  const fontFamily = role === 'caption' ? '"Caption Handwriting"' : 'monospace'
+  return `${fontSize}px ${fontFamily}`
+}
+
+export const loadCaptionFont = async () => {
+  if (typeof document === 'undefined' || !document.fonts) return
+
+  try {
+    await document.fonts.load('16px "Caption Handwriting"')
+  } catch {
+    // 字型載入失敗時讓 Canvas 使用 fallback 字型繼續輸出
+  }
+}
+
 const measureTextBlock = (
   ctx: CanvasRenderingContext2D,
   lines: DisplayLine[],
   baseLineHeight: number,
   lineGap: number,
+  captionScale: number,
 ) => {
   let width = 0
   let height = 0
 
   ctx.save()
   lines.forEach((line, index) => {
-    const fontSize = baseLineHeight * getLineScale(line.role)
-    ctx.font = `${fontSize}px monospace`
+    const fontSize = baseLineHeight * getTextScale(line.role, captionScale)
+    ctx.font = getLineFont(line.role, fontSize)
     width = Math.max(width, ctx.measureText(line.text).width)
     height += fontSize
     if (index < lines.length - 1) {
@@ -329,6 +348,7 @@ export function renderFrame({
     gapRatio,
     logoScale,
     fontScale,
+    captionScale,
     backgroundColor,
     primaryTextColor,
     secondaryTextColor,
@@ -356,7 +376,7 @@ export function renderFrame({
   // 3. 是否有資訊區
   const displayLines = buildDisplayLines(info, infoVisibility)
   const hasInfo = displayLines.length > 0
-  const textBlock = measureTextBlock(ctx, displayLines, infoLineHeight, lineGap)
+  const textBlock = measureTextBlock(ctx, displayLines, infoLineHeight, lineGap, captionScale)
   // 4. 資訊區
   const infoHeight = hasInfo ? Math.ceil(textBlock.height + infoPadding * 2) : 0
 
@@ -505,8 +525,8 @@ export function renderFrame({
     }
 
     displayLines.forEach((line, index) => {
-      const fontSize = infoLineHeight * getLineScale(line.role)
-      ctx.font = `${fontSize}px monospace`
+      const fontSize = infoLineHeight * getTextScale(line.role, captionScale)
+      ctx.font = getLineFont(line.role, fontSize)
       ctx.fillStyle =
         line.role === 'title' || line.role === 'caption' ? primaryTextColor : secondaryTextColor
       ctx.fillText(line.text, x, y)

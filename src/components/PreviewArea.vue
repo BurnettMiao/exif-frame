@@ -3,7 +3,7 @@ import { computed, nextTick, reactive, ref, onBeforeUnmount, onMounted, watch } 
 import { useFilterStore } from '@/stores/filterStore'
 import { useLayoutStore } from '@/stores/layoutStore'
 import { usePhotoCollection, type PreviewItem } from '@/composables/usePhotoCollection'
-import { renderFrame } from '@/utils/renderEngine'
+import { loadCaptionFont, renderFrame } from '@/utils/renderEngine'
 import { loadBrandLogo } from '@/utils/brandLogos'
 import ThumbnailStrip from '@/components/ThumbnailStrip.vue'
 
@@ -387,10 +387,17 @@ const renderPreviewItem = (item: PreviewItem): Promise<RenderedPreview> => {
   const cachedRender = renderedPreviewCache.get(cacheKey)
   if (cachedRender) return cachedRender
 
+  const logoBrand = item.info.logoBrand
+  const logoPromise =
+    logoBrand === 'none'
+      ? Promise.resolve(null)
+      : loadCachedBrandLogo(logoBrand ?? item.info.make ?? '')
+
   const renderPromise = Promise.all([
+    loadCaptionFont(),
     loadPreviewImage(item.url),
-    loadCachedBrandLogo(item.info.make ?? ''),
-  ]).then(([image, logo]) => {
+    logoPromise,
+  ]).then(([, image, logo]) => {
     const offscreenCanvas = document.createElement('canvas')
     renderFrame({
       canvas: offscreenCanvas,

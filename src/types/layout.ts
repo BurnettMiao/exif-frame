@@ -8,6 +8,7 @@ export interface FrameLayout {
   logoPosition: 'left' | 'center' | 'right' | 'center-top' | 'center-left'
   logoScale: number
   fontScale: number
+  captionScale: number
   backgroundColor: string
   primaryTextColor: string
   secondaryTextColor: string

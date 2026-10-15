@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { usePhotoCollection } from '@/composables/usePhotoCollection'
 import type { PhotoInfo, PhotoInfoVisibility } from '@/types/previewArea'
+import { brandLogoOptions } from '@/utils/brandLogos'
 
 type InfoField = {
   key: keyof PhotoInfo
@@ -92,6 +93,13 @@ const resetCurrentInfo = () => {
 
   resetPhotoInfo(item)
 }
+
+const updateLogoBrand = (value: string) => {
+  const item = activeItem.value
+  if (!item) return
+
+  updatePhotoInfo(item, { logoBrand: value === 'auto' ? undefined : value })
+}
 </script>
 
 <template>
@@ -116,6 +124,26 @@ const resetCurrentInfo = () => {
       <div
         class="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1 max-lg:flex max-lg:space-y-0 max-lg:gap-3 max-lg:overflow-x-auto max-lg:overflow-y-hidden max-lg:pr-0 max-lg:pb-1.5"
       >
+        <div
+          class="rounded-lg border border-gray-100 bg-gray-50 p-3 max-lg:w-60 max-lg:flex-[0_0_15rem]"
+        >
+          <label class="mb-2 block text-xs font-semibold text-gray-700" for="info-logo-brand">
+            Logo
+          </label>
+          <select
+            id="info-logo-brand"
+            class="h-9 w-full rounded-md border border-gray-200 bg-white px-2.5 text-sm text-gray-800 outline-none focus:border-amber-400"
+            :value="activeItem?.info.logoBrand ?? 'auto'"
+            @change="updateLogoBrand(($event.target as HTMLSelectElement).value)"
+          >
+            <option value="auto">自動判斷</option>
+            <option value="none">不顯示 Logo</option>
+            <option v-for="logo in brandLogoOptions" :key="logo.value" :value="logo.value">
+              {{ logo.label }}
+            </option>
+          </select>
+        </div>
+
         <div
           v-for="field in fields"
           :key="field.key"

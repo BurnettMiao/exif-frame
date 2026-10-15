@@ -1,6 +1,8 @@
 export interface PhotoInfo {
   date?: string
   model?: string
+  /** undefined = 依 EXIF 自動判斷，'none' = 強制不顯示 */
+  logoBrand?: string
   lens?: string
   location?: string
   caption?: string

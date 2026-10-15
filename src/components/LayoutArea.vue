@@ -59,9 +59,13 @@ const isCurrentPlacement = (option: (typeof layoutStore.layoutPlacements)[number
       </section>
 
       <section
-        class="space-y-4 rounded-lg border border-gray-100 bg-gray-50 p-3 max-lg:w-72 max-lg:flex-[0_0_18rem]"
+        class="isolate min-h-0 space-y-4 overflow-y-auto rounded-lg border border-gray-100 bg-gray-50 p-3 max-lg:w-72 max-lg:flex-[0_0_18rem]"
       >
-        <div class="text-sm font-semibold text-gray-900">細節調整</div>
+        <div
+          class="relative sticky top-0 z-10 -mx-3 bg-gray-50 px-3 pb-2 text-sm font-semibold text-gray-900 shadow-[0_2px_0_0_#f9fafb]"
+        >
+          細節調整
+        </div>
 
         <label class="block">
           <div class="mb-1.5 flex items-center justify-between text-xs text-gray-600">
@@ -124,6 +128,22 @@ const isCurrentPlacement = (option: (typeof layoutStore.layoutPlacements)[number
             :value="layoutStore.currentLayout.fontScale"
             class="w-full accent-amber-500"
             @input="updateNumber($event, layoutStore.updateFontScale)"
+          />
+        </label>
+
+        <label class="block">
+          <div class="mb-1.5 flex items-center justify-between text-xs text-gray-600">
+            <span>Caption 大小</span>
+            <span>{{ Math.round(layoutStore.currentLayout.captionScale * 100) }}%</span>
+          </div>
+          <input
+            type="range"
+            min="0.7"
+            max="1.8"
+            step="0.05"
+            :value="layoutStore.currentLayout.captionScale"
+            class="w-full accent-amber-500"
+            @input="updateNumber($event, layoutStore.updateCaptionScale)"
           />
         </label>
 
@@ -217,127 +237,158 @@ const isCurrentPlacement = (option: (typeof layoutStore.layoutPlacements)[number
           </button>
         </div>
 
-        <div class="flex min-h-0 flex-1 gap-3 overflow-x-auto overflow-y-hidden pb-1.5">
-          <section class="w-64 flex-[0_0_16rem] rounded-lg border border-gray-100 bg-gray-50 p-3">
-            <div class="mb-3 text-xs font-semibold text-gray-700">資訊列位置</div>
-            <div class="grid grid-cols-2 gap-2">
-              <button
-                v-for="option in layoutStore.layoutPlacements"
-                :key="option.name"
-                type="button"
-                class="h-9 rounded-md border bg-white px-2 text-xs text-gray-700"
-                :class="
-                  isCurrentPlacement(option) ? 'border-amber-400 text-amber-600' : 'border-gray-200'
-                "
-                @click="layoutStore.updatePlacement(option.infoPosition, option.logoPosition)"
-              >
-                {{ option.name }}
-              </button>
+        <div class="flex min-h-0 flex-1 gap-3 overflow-x-auto overflow-y-auto pb-1.5">
+          <section
+            class="flex h-full w-64 flex-[0_0_16rem] flex-col overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-3"
+          >
+            <div class="mb-3 shrink-0 text-xs font-semibold text-gray-700">資訊列位置</div>
+            <div class="min-h-0 flex-1 overflow-y-auto">
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  v-for="option in layoutStore.layoutPlacements"
+                  :key="option.name"
+                  type="button"
+                  class="h-9 rounded-md border bg-white px-2 text-xs text-gray-700"
+                  :class="
+                    isCurrentPlacement(option)
+                      ? 'border-amber-400 text-amber-600'
+                      : 'border-gray-200'
+                  "
+                  @click="layoutStore.updatePlacement(option.infoPosition, option.logoPosition)"
+                >
+                  {{ option.name }}
+                </button>
+              </div>
             </div>
           </section>
 
           <section
-            class="w-64 flex-[0_0_16rem] rounded-lg border border-gray-100 bg-gray-50 px-3 py-2"
+            class="flex h-full w-64 flex-[0_0_16rem] flex-col overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-3"
           >
-            <div class="mb-2 text-xs font-semibold text-gray-700">邊框與間距</div>
-            <label class="mb-1.5 block">
-              <div class="mb-1 flex items-center justify-between text-xs text-gray-600">
-                <span>邊框厚度</span>
-                <span>{{ Math.round(currentPadding * 100) }}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="0.16"
-                step="0.005"
-                :value="currentPadding"
-                class="block h-5 w-full accent-amber-500"
-                @input="updateNumber($event, layoutStore.updatePadding)"
-              />
-            </label>
-            <label class="block">
-              <div class="mb-1 flex items-center justify-between text-xs text-gray-600">
-                <span>內容間距</span>
-                <span>{{ Math.round(layoutStore.currentLayout.gapRatio * 100) }}%</span>
-              </div>
-              <input
-                type="range"
-                min="0.015"
-                max="0.1"
-                step="0.005"
-                :value="layoutStore.currentLayout.gapRatio"
-                class="block h-5 w-full accent-amber-500"
-                @input="updateNumber($event, layoutStore.updateGapRatio)"
-              />
-            </label>
+            <div class="mb-3 shrink-0 text-xs font-semibold text-gray-700">邊框與間距</div>
+            <div class="min-h-0 flex-1 overflow-y-auto">
+              <label class="mb-1.5 block min-h-[42px]">
+                <div class="mb-1 flex items-center justify-between text-xs text-gray-600">
+                  <span>邊框厚度</span>
+                  <span>{{ Math.round(currentPadding * 100) }}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="0.16"
+                  step="0.005"
+                  :value="currentPadding"
+                  class="block h-5 w-full accent-amber-500"
+                  @input="updateNumber($event, layoutStore.updatePadding)"
+                />
+              </label>
+              <label class="block min-h-[42px]">
+                <div class="mb-1 flex items-center justify-between text-xs text-gray-600">
+                  <span>內容間距</span>
+                  <span>{{ Math.round(layoutStore.currentLayout.gapRatio * 100) }}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.015"
+                  max="0.1"
+                  step="0.005"
+                  :value="layoutStore.currentLayout.gapRatio"
+                  class="block h-5 w-full accent-amber-500"
+                  @input="updateNumber($event, layoutStore.updateGapRatio)"
+                />
+              </label>
+            </div>
           </section>
 
           <section
-            class="w-64 flex-[0_0_16rem] rounded-lg border border-gray-100 bg-gray-50 px-3 py-2"
+            class="flex h-full w-[32rem] flex-[0_0_32rem] flex-col overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-3"
           >
-            <div class="mb-2 text-xs font-semibold text-gray-700">尺寸</div>
-            <label class="mb-1.5 block">
-              <div class="mb-1 flex items-center justify-between text-xs text-gray-600">
-                <span>Logo 大小</span>
-                <span>{{ Math.round(layoutStore.currentLayout.logoScale * 100) }}%</span>
+            <div class="mb-3 shrink-0 text-xs font-semibold text-gray-700">尺寸</div>
+            <div class="min-h-0 flex-1 overflow-y-auto">
+              <div class="flex flex-wrap gap-x-3 gap-y-1.5 overflow-x-hidden pb-1">
+                <label class="block h-[42px] w-[calc((100%-0.75rem)/2)]">
+                  <div class="mb-1 flex items-center justify-between text-xs text-gray-600">
+                    <span>Logo 大小</span>
+                    <span>{{ Math.round(layoutStore.currentLayout.logoScale * 100) }}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.08"
+                    max="0.32"
+                    step="0.005"
+                    :value="layoutStore.currentLayout.logoScale"
+                    class="block h-5 w-full accent-amber-500"
+                    @input="updateNumber($event, layoutStore.updateLogoScale)"
+                  />
+                </label>
+                <label class="block h-[42px] w-[calc((100%-0.75rem)/2)]">
+                  <div class="mb-1 flex items-center justify-between text-xs text-gray-600">
+                    <span>字體大小</span>
+                    <span>{{ Math.round(layoutStore.currentLayout.fontScale * 100) }}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.75"
+                    max="1.35"
+                    step="0.025"
+                    :value="layoutStore.currentLayout.fontScale"
+                    class="block h-5 w-full accent-amber-500"
+                    @input="updateNumber($event, layoutStore.updateFontScale)"
+                  />
+                </label>
+                <label class="block h-[42px] w-[calc((100%-0.75rem)/2)]">
+                  <div class="mb-1 flex items-center justify-between text-xs text-gray-600">
+                    <span>Caption 大小</span>
+                    <span>{{ Math.round(layoutStore.currentLayout.captionScale * 100) }}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.7"
+                    max="1.8"
+                    step="0.05"
+                    :value="layoutStore.currentLayout.captionScale"
+                    class="block h-5 w-full accent-amber-500"
+                    @input="updateNumber($event, layoutStore.updateCaptionScale)"
+                  />
+                </label>
               </div>
-              <input
-                type="range"
-                min="0.08"
-                max="0.32"
-                step="0.005"
-                :value="layoutStore.currentLayout.logoScale"
-                class="block h-5 w-full accent-amber-500"
-                @input="updateNumber($event, layoutStore.updateLogoScale)"
-              />
-            </label>
-            <label class="block">
-              <div class="mb-1 flex items-center justify-between text-xs text-gray-600">
-                <span>字體大小</span>
-                <span>{{ Math.round(layoutStore.currentLayout.fontScale * 100) }}%</span>
-              </div>
-              <input
-                type="range"
-                min="0.75"
-                max="1.35"
-                step="0.025"
-                :value="layoutStore.currentLayout.fontScale"
-                class="block h-5 w-full accent-amber-500"
-                @input="updateNumber($event, layoutStore.updateFontScale)"
-              />
-            </label>
+            </div>
           </section>
 
-          <section class="w-64 flex-[0_0_16rem] rounded-lg border border-gray-100 bg-gray-50 p-3">
-            <div class="mb-3 text-xs font-semibold text-gray-700">顏色</div>
-            <div class="grid grid-cols-3 gap-2">
-              <label class="text-xs text-gray-600">
-                <span class="mb-1.5 block">背景</span>
-                <input
-                  type="color"
-                  :value="layoutStore.currentLayout.backgroundColor"
-                  class="h-10 w-full cursor-pointer rounded border border-gray-200 bg-white p-1"
-                  @input="updateColor($event, layoutStore.updateBackgroundColor)"
-                />
-              </label>
-              <label class="text-xs text-gray-600">
-                <span class="mb-1.5 block">主文字</span>
-                <input
-                  type="color"
-                  :value="layoutStore.currentLayout.primaryTextColor"
-                  class="h-10 w-full cursor-pointer rounded border border-gray-200 bg-white p-1"
-                  @input="updateColor($event, layoutStore.updatePrimaryTextColor)"
-                />
-              </label>
-              <label class="text-xs text-gray-600">
-                <span class="mb-1.5 block">次文字</span>
-                <input
-                  type="color"
-                  :value="layoutStore.currentLayout.secondaryTextColor"
-                  class="h-10 w-full cursor-pointer rounded border border-gray-200 bg-white p-1"
-                  @input="updateColor($event, layoutStore.updateSecondaryTextColor)"
-                />
-              </label>
+          <section
+            class="flex h-full w-64 flex-[0_0_16rem] flex-col overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-3"
+          >
+            <div class="mb-3 shrink-0 text-xs font-semibold text-gray-700">顏色</div>
+            <div class="min-h-0 flex-1 overflow-y-auto">
+              <div class="grid grid-cols-3 gap-2">
+                <label class="text-xs text-gray-600">
+                  <span class="mb-1.5 block">背景</span>
+                  <input
+                    type="color"
+                    :value="layoutStore.currentLayout.backgroundColor"
+                    class="h-10 w-full cursor-pointer rounded border border-gray-200 bg-white p-1"
+                    @input="updateColor($event, layoutStore.updateBackgroundColor)"
+                  />
+                </label>
+                <label class="text-xs text-gray-600">
+                  <span class="mb-1.5 block">主文字</span>
+                  <input
+                    type="color"
+                    :value="layoutStore.currentLayout.primaryTextColor"
+                    class="h-10 w-full cursor-pointer rounded border border-gray-200 bg-white p-1"
+                    @input="updateColor($event, layoutStore.updatePrimaryTextColor)"
+                  />
+                </label>
+                <label class="text-xs text-gray-600">
+                  <span class="mb-1.5 block">次文字</span>
+                  <input
+                    type="color"
+                    :value="layoutStore.currentLayout.secondaryTextColor"
+                    class="h-10 w-full cursor-pointer rounded border border-gray-200 bg-white p-1"
+                    @input="updateColor($event, layoutStore.updateSecondaryTextColor)"
+                  />
+                </label>
+              </div>
             </div>
           </section>
         </div>

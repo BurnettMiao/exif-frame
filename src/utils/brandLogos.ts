@@ -15,6 +15,12 @@ const BRAND_LOGOS: Record<string, string> = {
   Google: brandGoogle,
 }
 
+export const brandLogoOptions = Object.entries(BRAND_LOGOS).map(([value, src]) => ({
+  value,
+  label: value === 'FUJIFILM' ? 'Fujifilm' : value,
+  src,
+}))
+
 /**
  * 載入廠牌對應的 logo，找不到時回傳 null
  */
