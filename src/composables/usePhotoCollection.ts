@@ -13,6 +13,8 @@ export interface PreviewItem {
   info: PhotoInfo
   originalInfo: PhotoInfo
   infoVisibility: PhotoInfoVisibility
+  /** 個別照片覆寫的 Logo 大小；未設定時沿用版型預設值 */
+  logoScaleOverride?: number
   ready?: Promise<PreviewItem>
 }
 
@@ -62,6 +64,7 @@ export function usePhotoCollection() {
         | 'info'
         | 'originalInfo'
         | 'infoVisibility'
+        | 'logoScaleOverride'
       >
     >,
   ) {
@@ -267,6 +270,10 @@ export function usePhotoCollection() {
     })
   }
 
+  function updateLogoScaleOverride(target: PreviewItem, value: number | undefined) {
+    return updatePreviewItem(target, { logoScaleOverride: value })
+  }
+
   function resetPhotoInfo(target: PreviewItem) {
     return updatePreviewItem(target, {
       info: { ...target.originalInfo },
@@ -305,6 +312,7 @@ export function usePhotoCollection() {
     resetCrop,
     updatePhotoInfo,
     setInfoVisibility,
+    updateLogoScaleOverride,
     resetPhotoInfo,
     deletePhoto,
   }

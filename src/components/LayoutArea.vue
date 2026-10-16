@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useLayoutStore } from '@/stores/layoutStore'
+import { usePhotoCollection } from '@/composables/usePhotoCollection'
 import defaultPic from '@/assets/DSC00255.jpg'
 
 const layoutStore = useLayoutStore()
+const { activeItem, updateLogoScaleOverride } = usePhotoCollection()
 
 const mobileLayoutMode = ref<'presets' | 'details'>('presets')
 
@@ -13,6 +15,10 @@ const selectedLayout = (index: number) => {
 }
 
 const currentPadding = computed(() => layoutStore.currentLayout.padding.top)
+const currentLogoScale = computed(
+  () => activeItem.value?.logoScaleOverride ?? layoutStore.currentLayout.logoScale,
+)
+const hasLogoScaleOverride = computed(() => activeItem.value?.logoScaleOverride !== undefined)
 
 const updateNumber = (event: Event, update: (value: number) => void) => {
   update(Number((event.target as HTMLInputElement).value))
@@ -20,6 +26,23 @@ const updateNumber = (event: Event, update: (value: number) => void) => {
 
 const updateColor = (event: Event, update: (value: string) => void) => {
   update((event.target as HTMLInputElement).value)
+}
+
+const updateLogoScale = (value: number) => {
+  const item = activeItem.value
+  if (!item) {
+    layoutStore.updateLogoScale(value)
+    return
+  }
+
+  updateLogoScaleOverride(item, value)
+}
+
+const resetLogoScale = () => {
+  const item = activeItem.value
+  if (!item) return
+
+  updateLogoScaleOverride(item, undefined)
 }
 
 const isCurrentPlacement = (option: (typeof layoutStore.layoutPlacements)[number]) =>
@@ -99,21 +122,31 @@ const isCurrentPlacement = (option: (typeof layoutStore.layoutPlacements)[number
           />
         </label>
 
-        <label class="block">
+        <div class="block">
           <div class="mb-1.5 flex items-center justify-between text-xs text-gray-600">
             <span>Logo 大小</span>
-            <span>{{ Math.round(layoutStore.currentLayout.logoScale * 100) }}%</span>
+            <span class="flex items-center gap-2">
+              <button
+                v-if="hasLogoScaleOverride"
+                type="button"
+                class="text-amber-600 hover:text-amber-700"
+                @click="resetLogoScale"
+              >
+                預設
+              </button>
+              <span>{{ Math.round(currentLogoScale * 100) }}%</span>
+            </span>
           </div>
           <input
             type="range"
             min="0.08"
             max="0.32"
             step="0.005"
-            :value="layoutStore.currentLayout.logoScale"
+            :value="currentLogoScale"
             class="w-full accent-amber-500"
-            @input="updateNumber($event, layoutStore.updateLogoScale)"
+            @input="updateNumber($event, updateLogoScale)"
           />
-        </label>
+        </div>
 
         <label class="block">
           <div class="mb-1.5 flex items-center justify-between text-xs text-gray-600">
@@ -306,21 +339,31 @@ const isCurrentPlacement = (option: (typeof layoutStore.layoutPlacements)[number
             <div class="mb-3 shrink-0 text-xs font-semibold text-gray-700">尺寸</div>
             <div class="min-h-0 flex-1 overflow-y-auto">
               <div class="flex flex-wrap gap-x-3 gap-y-1.5 overflow-x-hidden pb-1">
-                <label class="block h-[42px] w-[calc((100%-0.75rem)/2)]">
+                <div class="block h-[42px] w-[calc((100%-0.75rem)/2)]">
                   <div class="mb-1 flex items-center justify-between text-xs text-gray-600">
                     <span>Logo 大小</span>
-                    <span>{{ Math.round(layoutStore.currentLayout.logoScale * 100) }}%</span>
+                    <span class="flex items-center gap-1.5">
+                      <button
+                        v-if="hasLogoScaleOverride"
+                        type="button"
+                        class="text-amber-600 hover:text-amber-700"
+                        @click="resetLogoScale"
+                      >
+                        預設
+                      </button>
+                      <span>{{ Math.round(currentLogoScale * 100) }}%</span>
+                    </span>
                   </div>
                   <input
                     type="range"
                     min="0.08"
                     max="0.32"
                     step="0.005"
-                    :value="layoutStore.currentLayout.logoScale"
+                    :value="currentLogoScale"
                     class="block h-5 w-full accent-amber-500"
-                    @input="updateNumber($event, layoutStore.updateLogoScale)"
+                    @input="updateNumber($event, updateLogoScale)"
                   />
-                </label>
+                </div>
                 <label class="block h-[42px] w-[calc((100%-0.75rem)/2)]">
                   <div class="mb-1 flex items-center justify-between text-xs text-gray-600">
                     <span>字體大小</span>

@@ -4,7 +4,7 @@ import { useFilterStore } from '@/stores/filterStore'
 import { useLayoutStore } from '@/stores/layoutStore'
 import { usePhotoCollection, type PreviewItem } from '@/composables/usePhotoCollection'
 import { loadCaptionFont, renderFrame } from '@/utils/renderEngine'
-import { loadBrandLogo } from '@/utils/brandLogos'
+import { getBrandLogoOpticalScale, loadBrandLogo } from '@/utils/brandLogos'
 import ThumbnailStrip from '@/components/ThumbnailStrip.vue'
 
 import pic from '@/assets/DSC00255.jpg'
@@ -371,12 +371,26 @@ const loadCachedBrandLogo = (brand: string) => {
   return logoPromise
 }
 
+const getLogoBrand = (item: PreviewItem | null | undefined) => {
+  const selectedBrand = item?.info.logoBrand
+  if (selectedBrand === 'none') return ''
+  return selectedBrand ?? item?.info.make ?? ''
+}
+
+const getRenderLayout = (item: PreviewItem | null | undefined) => ({
+  ...layoutStore.currentLayout,
+  logoScale:
+    (item?.logoScaleOverride ?? layoutStore.currentLayout.logoScale) *
+    getBrandLogoOpticalScale(getLogoBrand(item)),
+})
+
 const getPreviewRenderKey = (item: PreviewItem) =>
   [
     item.id,
     item.url,
     JSON.stringify(item.info),
     JSON.stringify(item.infoVisibility),
+    item.logoScaleOverride,
     JSON.stringify(layoutStore.currentLayout),
     currentFilter.value,
     currentGrainAmount.value,
@@ -387,11 +401,8 @@ const renderPreviewItem = (item: PreviewItem): Promise<RenderedPreview> => {
   const cachedRender = renderedPreviewCache.get(cacheKey)
   if (cachedRender) return cachedRender
 
-  const logoBrand = item.info.logoBrand
-  const logoPromise =
-    logoBrand === 'none'
-      ? Promise.resolve(null)
-      : loadCachedBrandLogo(logoBrand ?? item.info.make ?? '')
+  const logoBrand = getLogoBrand(item)
+  const logoPromise = loadCachedBrandLogo(logoBrand)
 
   const renderPromise = Promise.all([
     loadCaptionFont(),
@@ -402,7 +413,7 @@ const renderPreviewItem = (item: PreviewItem): Promise<RenderedPreview> => {
     renderFrame({
       canvas: offscreenCanvas,
       image,
-      layout: layoutStore.currentLayout,
+      layout: getRenderLayout(item),
       info: item.info,
       infoVisibility: item.infoVisibility,
       logo,
@@ -632,7 +643,7 @@ const render = () => {
   renderFrame({
     canvas: canvas.value,
     image: currentImage.value,
-    layout: layoutStore.currentLayout,
+    layout: getRenderLayout(activeItem.value),
     info: activeItem.value?.info ?? null,
     infoVisibility: activeItem.value?.infoVisibility ?? null,
     logo: logoImage.value,

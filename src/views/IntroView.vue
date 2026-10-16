@@ -11,7 +11,12 @@ import appleLogo from '@/assets/logos/apple_logo.svg'
 import canonLogo from '@/assets/logos/canon_logo.svg'
 import fujifilmLogo from '@/assets/logos/fujifilm_logo.svg'
 import googleLogo from '@/assets/logos/google_logo.svg'
+import hasselbladLogo from '@/assets/logos/hasselblad_logo.svg'
+import leicaLogo from '@/assets/logos/leica_logo.svg'
+import lumixLogo from '@/assets/logos/lumix_logo.svg'
 import nikonLogo from '@/assets/logos/nikon_logo.svg'
+import omSystemLogo from '@/assets/logos/omSystem-logo.svg'
+import ricohLogo from '@/assets/logos/ricoh_logo.svg'
 import sonyLogo from '@/assets/logos/sony_logo.svg'
 
 const introImages = [
@@ -122,6 +127,26 @@ const supportedBrandLogos = [
   {
     name: 'Google',
     src: googleLogo,
+  },
+  {
+    name: 'Hasselblad',
+    src: hasselbladLogo,
+  },
+  {
+    name: 'Leica',
+    src: leicaLogo,
+  },
+  {
+    name: 'LUMIX',
+    src: lumixLogo,
+  },
+  {
+    name: 'OM SYSTEM',
+    src: omSystemLogo,
+  },
+  {
+    name: 'Ricoh',
+    src: ricohLogo,
   },
 ]
 
