@@ -118,12 +118,17 @@ export function usePhotoCollection() {
 
       const rawMake = getTagDescription(tags['Make']).trim()
       const make = rawMake.split(' ')[0] || '未知廠牌'
-      const rawModel = getTagDescription(tags['Model']) || '未知相機'
+      const rawModel = getTagDescription(tags['Model']).trim() || '未知相機'
       const lens = getTagDescription(tags['LensModel']) || getTagDescription(tags['Lens'])
+      const normalizedModel = rawModel.toLocaleLowerCase()
+      const fullMakePrefix = `${rawMake.toLocaleLowerCase()} `
+      const shortMakePrefix = `${make.toLocaleLowerCase()} `
       const model =
-        rawMake && rawModel.toLocaleLowerCase().startsWith(`${rawMake.toLocaleLowerCase()} `)
+        rawMake && normalizedModel.startsWith(fullMakePrefix)
           ? rawModel.slice(rawMake.length).trim()
-          : rawModel
+          : make !== '未知廠牌' && normalizedModel.startsWith(shortMakePrefix)
+            ? rawModel.slice(make.length).trim()
+            : rawModel
 
       return {
         date:
