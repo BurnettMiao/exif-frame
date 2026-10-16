@@ -116,13 +116,13 @@ export function usePhotoCollection() {
       const tags = await ExifReader.load(file)
       console.log('相片基本資訊', tags)
 
-      const rawMake = getTagDescription(tags['Make'])
+      const rawMake = getTagDescription(tags['Make']).trim()
       const make = rawMake.split(' ')[0] || '未知廠牌'
       const rawModel = getTagDescription(tags['Model']) || '未知相機'
       const lens = getTagDescription(tags['LensModel']) || getTagDescription(tags['Lens'])
       const model =
-        make !== '未知廠牌' && rawModel.startsWith(make)
-          ? rawModel.slice(make.length).trim()
+        rawMake && rawModel.toLocaleLowerCase().startsWith(`${rawMake.toLocaleLowerCase()} `)
+          ? rawModel.slice(rawMake.length).trim()
           : rawModel
 
       return {
