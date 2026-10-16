@@ -21,12 +21,12 @@ const BRAND_LOGOS: Record<string, BrandLogo> = {
   NIKON: { src: brandNikon, opticalScale: 1 },
   Canon: { src: brandCanon, opticalScale: 1 },
   FUJIFILM: { src: brandFuji, opticalScale: 1 },
-  Apple: { src: brandApple, opticalScale: 0.78 },
-  Google: { src: brandGoogle, opticalScale: 0.78 },
+  Apple: { src: brandApple, opticalScale: 0.42 },
+  Google: { src: brandGoogle, opticalScale: 0.45 },
   Hasselblad: { src: brandHasselblad, opticalScale: 1.35 },
-  LEICA: { src: brandLeica, opticalScale: 0.7 },
+  LEICA: { src: brandLeica, opticalScale: 0.4 },
   Panasonic: { src: brandLumix, opticalScale: 1 },
-  OM: { src: brandOmSystem, opticalScale: 0.68 },
+  OM: { src: brandOmSystem, opticalScale: 0.45 },
   RICOH: { src: brandRicoh, opticalScale: 1.15 },
 }
 
