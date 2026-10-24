@@ -28,6 +28,9 @@ const isPreviewAnimating = ref(false)
 const isPreviewPreparing = ref(false)
 const isUploadingPhoto = ref(false)
 const isExportingAll = ref(false)
+const previewNavigationDirection = ref<1 | -1>(1)
+const previewExitDirection = ref<1 | -1>(-1)
+const suppressNextPreviewClick = ref(false)
 // const showSupportPrompt = ref(false)
 const showThumbnailStrip = ref(true)
 // const supportUrl = ''
@@ -40,6 +43,10 @@ const renderedPreviewCache = new Map<string, Promise<RenderedPreview>>()
 const renderedPreviewUrlCache = new Map<string, Promise<string>>()
 const renderedPreviewUrls = reactive(new Map<string, string>())
 const renderedPreviewSizes = reactive(new Map<string, { width: number; height: number }>())
+
+const previewSwipeStart = ref<{ pointerId: number; x: number; y: number } | null>(null)
+const previewSwipeMoved = ref(false)
+const previewSwipeThreshold = 52
 
 interface RenderedPreview {
   canvas: HTMLCanvasElement
@@ -286,7 +293,8 @@ const stackedPreviewItems = computed<StackedPreviewEntry[]>(() => {
   if (total === 0) return []
 
   return Array.from({ length: 3 }, (_, stackIndex) => {
-    const itemIndex = (currentPreviewIndex.value + stackIndex) % total
+    const itemIndex =
+      (currentPreviewIndex.value + previewNavigationDirection.value * stackIndex + total) % total
 
     return {
       item: previewItems.value[itemIndex]!,
@@ -302,7 +310,8 @@ const animatedStackedPreviewItems = computed<StackedPreviewEntry[]>(() => {
 
   if (!isPreviewAnimating.value || total <= 2) return items
 
-  const incomingItemIndex = (currentPreviewIndex.value + 3) % total
+  const incomingItemIndex =
+    (currentPreviewIndex.value + previewNavigationDirection.value * 3 + total) % total
   const incomingItem = previewItems.value[incomingItemIndex]
   if (!incomingItem) return items
 
@@ -325,6 +334,7 @@ const previewStackStyle = computed(() => {
     '--stack-size': animatedStackedPreviewItems.value.length,
     '--stack-offset': `${stackOffset}px`,
     '--stack-rotation': `${stackRotation}deg`,
+    '--navigation-direction': previewExitDirection.value,
   }
 })
 
@@ -533,7 +543,9 @@ const getStackedPreviewItemsFromIndex = (startIndex: number) => {
   if (total === 0) return []
 
   return Array.from({ length: Math.min(3, total) }, (_, stackIndex) => {
-    return previewItems.value[(startIndex + stackIndex) % total]
+    const itemIndex =
+      (startIndex + previewNavigationDirection.value * stackIndex + total) % total
+    return previewItems.value[itemIndex]
   }).filter((item): item is PreviewItem => !!item)
 }
 
@@ -549,7 +561,10 @@ const finishPreviewAnimation = async () => {
   try {
     if (previewItems.value.length <= 1) return
 
-    const nextIndex = (currentPreviewIndex.value + 1) % previewItems.value.length
+    const direction = previewNavigationDirection.value
+    const nextIndex =
+      (currentPreviewIndex.value + direction + previewItems.value.length) %
+      previewItems.value.length
     const nextItem = previewItems.value[nextIndex]
 
     if (!nextItem) return
@@ -561,6 +576,7 @@ const finishPreviewAnimation = async () => {
     currentImage.value = renderedPreview.image
     logoImage.value = renderedPreview.logo
     selectPhoto(nextIndex)
+    previewNavigationDirection.value = 1
 
     await nextTick()
     updatePreviewFrameSize()
@@ -570,7 +586,7 @@ const finishPreviewAnimation = async () => {
   }
 }
 
-const selectNextPhoto = async () => {
+const selectRelativePhoto = async (direction: 1 | -1, exitDirection: 1 | -1) => {
   if (
     !canSelectNextPhoto.value ||
     isPreviewAnimating.value ||
@@ -579,11 +595,14 @@ const selectNextPhoto = async () => {
   )
     return
 
-  const nextItem = previewItems.value[(currentPreviewIndex.value + 1) % previewItems.value.length]
+  const nextIndex =
+    (currentPreviewIndex.value + direction + previewItems.value.length) %
+    previewItems.value.length
+  const nextItem = previewItems.value[nextIndex]
   if (!nextItem) return
-  const nextIndex = previewItems.value.findIndex((item) => item.id === nextItem.id)
-  if (nextIndex === -1) return
 
+  previewNavigationDirection.value = direction
+  previewExitDirection.value = exitDirection
   isPreviewPreparing.value = true
   try {
     await preparePreviewStackAssets(nextIndex)
@@ -600,6 +619,75 @@ const selectNextPhoto = async () => {
   previewAnimationTimer = window.setTimeout(() => {
     void finishPreviewAnimation()
   }, 600)
+}
+
+const selectNextPhoto = () => {
+  // 按鈕的下一張固定讓目前卡片往右飛出。
+  void selectRelativePhoto(1, 1)
+}
+
+const handlePreviewPointerDown = (event: PointerEvent) => {
+  if (event.pointerType === 'mouse' && event.button !== 0) return
+
+  previewSwipeStart.value = {
+    pointerId: event.pointerId,
+    x: event.clientX,
+    y: event.clientY,
+  }
+  previewSwipeMoved.value = false
+}
+
+const handlePreviewPointerMove = (event: PointerEvent) => {
+  const start = previewSwipeStart.value
+  if (!start || start.pointerId !== event.pointerId) return
+
+  const deltaX = event.clientX - start.x
+  const deltaY = event.clientY - start.y
+  if (Math.abs(deltaX) <= 8 || Math.abs(deltaX) <= Math.abs(deltaY)) return
+
+  previewSwipeMoved.value = true
+  if (event.cancelable) event.preventDefault()
+}
+
+const finishPreviewPointerGesture = (event: PointerEvent) => {
+  const start = previewSwipeStart.value
+  if (!start || start.pointerId !== event.pointerId) return
+
+  const deltaX = event.clientX - start.x
+  const deltaY = event.clientY - start.y
+  const isHorizontalSwipe =
+    Math.abs(deltaX) >= previewSwipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)
+
+  previewSwipeStart.value = null
+
+  if (!isHorizontalSwipe || !previewSwipeMoved.value) {
+    previewSwipeMoved.value = false
+    return
+  }
+
+  suppressNextPreviewClick.value = true
+  previewSwipeMoved.value = false
+
+  if (deltaX < 0) {
+    void selectRelativePhoto(1, -1)
+  } else {
+    // 右滑直接共用按鈕的下一張流程，確保所有切換行為完全一致。
+    selectNextPhoto()
+  }
+}
+
+const handlePreviewPointerCancel = () => {
+  previewSwipeStart.value = null
+  previewSwipeMoved.value = false
+}
+
+const handlePreviewCardClick = (itemIndex: number, stackIndex: number) => {
+  if (suppressNextPreviewClick.value) {
+    suppressNextPreviewClick.value = false
+    return
+  }
+
+  selectPreviewCard(itemIndex, stackIndex)
 }
 
 const selectThumbnailPhoto = (index: number) => {
@@ -892,6 +980,10 @@ watch(
           class="preview-stack"
           :class="{ 'is-animating': isPreviewAnimating }"
           :style="previewStackStyle"
+          @pointerdown="handlePreviewPointerDown"
+          @pointermove="handlePreviewPointerMove"
+          @pointerup="finishPreviewPointerGesture"
+          @pointercancel="handlePreviewPointerCancel"
         >
           <button
             v-for="{ item, itemIndex, stackIndex, isIncoming } in animatedStackedPreviewItems"
@@ -900,7 +992,7 @@ watch(
             class="preview-card"
             :class="{ 'is-active': stackIndex === 0 && !isIncoming, 'is-incoming': isIncoming }"
             :style="{ '--stack-index': stackIndex, '--promote-index': Math.max(stackIndex - 1, 0) }"
-            @click="selectPreviewCard(itemIndex, stackIndex)"
+            @click="handlePreviewCardClick(itemIndex, stackIndex)"
           >
             <canvas
               v-if="stackIndex === 0 && !isIncoming"
@@ -1010,6 +1102,8 @@ watch(
   align-items: center;
   justify-content: center;
   padding: 8px 44px 44px 8px;
+  touch-action: pan-y;
+  user-select: none;
 }
 
 .next-preview-button {
@@ -1250,7 +1344,7 @@ watch(
 
 .preview-stack.is-animating .preview-card.is-active {
   opacity: 0;
-  transform: translate(450px, 0) scale(1) rotate(20deg);
+  transform: translate(calc(var(--navigation-direction) * 450px), 0) scale(1) rotate(20deg);
 }
 
 .preview-stack.is-animating .preview-card:not(.is-active) {
