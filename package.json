@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
+    "@vercel/analytics": "^2.0.1",
     "animejs": "^4.5.0",
     "cropperjs": "^2.2.0",
     "exifreader": "^4.38.1",
